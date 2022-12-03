@@ -12,5 +12,5 @@ YEAR=$(date +%Y)
 URL=https://adventofcode.com/$YEAR/day/$DAY/input
 
 curl --cookie "session=$SESSION" \
-     -H "User-Agent: custom bash script with curl, by nirgle@gmail.com" \
+     -H "User-Agent: custom bash script with curl, by github.com/jasonincanada" \
      $URL
