@@ -6,6 +6,7 @@ Visit the Advent of Code sub-reddit for discussions and other participants' code
 
 | Day | Title                                           | Description                                  |
 | --- | ----------------------------------------------- | -------------------------------------------- |
+| 4   | [Camp Cleanup](./day_04/src/main.rs)            | Count containing and overlapping ranges      |
 | 3   | [Rucksack Reorganization](./day_03/src/main.rs) | Find common items in a group of rucksacks    |
 | 2   | [Rock Paper Scissors](./day_02/src/main.rs)     | Rock paper scissors game                     |
 | 1   | [Calorie Counting](./day_01/src/main.rs)        | Count calorie totals                         |
