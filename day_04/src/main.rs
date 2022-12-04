@@ -25,10 +25,10 @@ impl SectionRange {
 
     // use bitwise and (&) to test for overlap
     fn overlaps_with(&self, other: &SectionRange) -> bool {
-        let from = range_to_int(self.from, self.to);
-        let to   = range_to_int(other.from, other.to);
+        let elf1 = range_to_int(self.from, self.to);
+        let elf2 = range_to_int(other.from, other.to);
 
-        from & to > 0 
+        elf1 & elf2 > 0
     }
 }
 
