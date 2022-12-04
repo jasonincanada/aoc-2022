@@ -35,7 +35,7 @@ impl SectionRange {
 //                                                    87654321
 // turn the range 4-6 into the integer with bitstring 00111000
 fn range_to_int(from: usize, to: usize) -> u128 {
-    assert!(to   <= 128);
+    assert!(to   <= 128-1);
     assert!(from <= 128);
     assert!(from <= to);
 
