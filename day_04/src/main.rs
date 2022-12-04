@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn test_range_to_bits() {
+    fn test_range_to_int() {
         assert_eq!(range_to_int(4,6), 16+32+64);
     }
 }
