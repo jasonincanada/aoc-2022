@@ -66,7 +66,7 @@ impl Input {
         let contents = std::fs::read_to_string(file).expect("Couldn't read input");
 
         // the input is in two sections, the ship graphic and the move list
-        let (ship, moves) = contents.trim().split_once("\n\n").unwrap();
+        let (ship, moves) = contents.trim_end().split_once("\n\n").unwrap();
         
         Input {
             ship : Input::parse_ship(ship),
@@ -167,4 +167,8 @@ mod tests {
         Running `target\debug\day_05.exe`
     Part 1: SHMSDGZVC
     Part 2: VRZGHDFBQ
+
+    $ cargo run
+    Part 1: 7777-33-66-3-0-66-88-3-33-7777
+    Part 2: 7777-33-66-3-0-66-88-3-33-7777
 */
