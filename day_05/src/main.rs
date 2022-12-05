@@ -50,15 +50,11 @@ fn part2(input: &Input) -> String {
     top_crates(&ship)
 }
 
-// build a string from the top crate from every stack. assumes no stacks are empty
-fn top_crates(ship: &Ship) -> String {
-    assert!(ship.iter()
-                .skip(1)
-                .all(|stack| !stack.is_empty() ));
-
+// build a string from the top crate from every stack that has a crate
+fn top_crates(ship: &Ship) -> String {   
     ship.iter()
         .skip(1)
-        .map(|stack| stack[stack.len()-1])
+        .filter_map(|stack| stack.iter().last())
         .collect()
 }
 
