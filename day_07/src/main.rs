@@ -116,7 +116,7 @@ fn tally_sizes(node: &mut Directory) -> usize {
 
     node.total_size =
         node.dirs.iter_mut()        // this needs to be iter_mut() because within map's call to
-                 .map(tally_sizes)  // tally_sizes the system.total_size field will be updated
+                 .map(tally_sizes)  // tally_sizes the node.total_size field will be updated
                  .sum::<usize>()
 
       + node.files.iter()           // add the total file sizes from this directory
