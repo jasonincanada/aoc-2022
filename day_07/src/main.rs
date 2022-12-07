@@ -18,7 +18,7 @@ struct Directory {
 type File = usize;
 
 // sum the sizes of all directories up to 100k in size
-fn part1(input: &Input) -> usize {    
+fn part1(input: &Input) -> usize {
     let totals = get_all_totals_from(&input.system);
 
     totals.iter()
@@ -27,7 +27,7 @@ fn part1(input: &Input) -> usize {
 }
 
 // find the smallest directory we'd have to delete to free enough space
-fn part2(input: &Input) -> usize {    
+fn part2(input: &Input) -> usize {
 
     let free_at_least = 30_000_000 - (70_000_000 - input.system.total_size);
 
@@ -73,7 +73,7 @@ impl Input {
         for line in s.lines().skip(1) {
 
             // changing directory
-            if line.starts_with("$ cd ") {                
+            if line.starts_with("$ cd ") {
                 match &line[5..] {
                     ".." => { path.pop().expect("found a 'cd ..' but already at root path"); },
                     dir  => { path.push(dir.to_string()); }
@@ -89,7 +89,6 @@ impl Input {
                 at_path_do(&mut root,
                            &path,
                            |node| node.dirs.push(Directory::new(line[4..].to_string())));
-
             }
 
             // a file with a size/name (the name isn't used anywhere so we don't collect it)
@@ -180,7 +179,7 @@ mod tests {
 
     #[test]
     fn test_tally_sizes() {
-        let input = get_example();        
+        let input = get_example();
         assert_eq!(input.system.total_size, 48381165);
     }
 
