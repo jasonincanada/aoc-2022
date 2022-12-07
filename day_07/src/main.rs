@@ -36,7 +36,7 @@ fn part2(input: &Input) -> usize {
     totals.into_iter()
           .skip_while(|&size| size < free_at_least)
           .next()
-          .unwrap()
+          .expect("assumed at least one size >= free_at_least")
 }
 
 fn get_all_totals_from(system: &Directory) -> Vec<usize> {
@@ -74,7 +74,7 @@ impl Input {
             // changing directory
             if line.starts_with("$ cd ") {                
                 match &line[5..] {
-                    ".." => { path.pop().unwrap(); },
+                    ".." => { path.pop().expect("found a 'cd ..' but already at root path"); },
                     dir  => { path.push(dir.to_string()); }
                 };
             }
@@ -138,7 +138,8 @@ fn at_path_do<F>(node: &mut Directory,
     } else {
         // recurse into the next directory in the path
         at_path_do(node.dirs.iter_mut()
-                            .find(|dir| dir.name == path[0]).unwrap(),
+                            .find(|dir| dir.name == path[0])
+                            .expect("tried to 'cd' into a non-existent directory"),
                    &path[1..],
                    operation);
     }
