@@ -72,13 +72,11 @@ impl Input {
         for line in s.lines().skip(1) {
 
             // changing directory
-            if line.starts_with("$ cd ") {
-                let dir = &line[5..];
-                if dir == ".." {
-                    path.pop();
-                } else {
-                    path.push(dir.to_string());
-                }
+            if line.starts_with("$ cd ") {                
+                match &line[5..] {
+                    ".." => { path.pop().unwrap(); },
+                    dir  => { path.push(dir.to_string()); }
+                };
             }
 
             // nothing to do for ls
