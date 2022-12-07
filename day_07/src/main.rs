@@ -112,17 +112,17 @@ impl Input {
 }
 
 // recursively sum the size of directories based on their files and sub-dirs sizes
-fn tally_sizes(system: &mut Directory) -> usize {
+fn tally_sizes(node: &mut Directory) -> usize {
 
-    system.total_size =
-        system.dirs.iter_mut()        // this needs to be iter_mut() because within map's call to
-                   .map(tally_sizes)  // tally_sizes the system.total_size field will be updated
-                   .sum::<usize>()
+    node.total_size =
+        node.dirs.iter_mut()        // this needs to be iter_mut() because within map's call to
+                 .map(tally_sizes)  // tally_sizes the system.total_size field will be updated
+                 .sum::<usize>()
 
-      + system.files.iter()           // add the total file sizes from this directory
-                    .sum::<usize>();
+      + node.files.iter()           // add the total file sizes from this directory
+                  .sum::<usize>();
 
-    system.total_size
+    node.total_size
 }
 
 // recursively descend through the filesystem to a certain path,
