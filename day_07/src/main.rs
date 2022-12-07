@@ -139,7 +139,7 @@ fn at_path_do<F>(node: &mut Directory,
         // recurse into the next directory in the path
         at_path_do(node.dirs.iter_mut()
                             .find(|dir| dir.name == path[0])
-                            .expect("tried to 'cd' into a non-existent directory"),
+                            .expect("path contained a non-existent directory"),
                    &path[1..],
                    operation);
     }
