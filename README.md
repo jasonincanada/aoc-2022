@@ -12,3 +12,14 @@ Visit the Advent of Code sub-reddit for discussions and other participants' code
 | 3   | [Rucksack Reorganization](./day_03/src/main.rs) | Find common items in a group of rucksacks    |
 | 2   | [Rock Paper Scissors](./day_02/src/main.rs)     | Rock paper scissors game                     |
 | 1   | [Calorie Counting](./day_01/src/main.rs)        | Count calorie totals                         |
+
+## Past Years
+
+| Year                                              | Language | Stars |
+| ------------------------------------------------- | -------- | ----- |
+| [2022](https://github.com/jasonincanada/aoc-2022) | Rust     | tbd   |
+| [2021](https://github.com/jasonincanada/aoc-2021) | C#       | 38    |
+| [2020](https://github.com/jasonincanada/aoc-2020) | Haskell  | 26    |
+| [2019](https://github.com/jasonincanada/aoc-2019) | Haskell  | 32    |
+| [2018](https://github.com/jasonincanada/aoc-2018) | Haskell  | 25    |
+| [2017](https://github.com/jasonincanada/aoc-2017) | Haskell  | 42    |
