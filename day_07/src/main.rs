@@ -77,7 +77,7 @@ impl Input {
                 match &line[5..] {
                     ".." => { path.pop().expect("found a 'cd ..' but already at root path"); },
                     dir  => { path.push(dir.to_string()); }
-                };
+                }
             }
 
             // nothing to do for ls
