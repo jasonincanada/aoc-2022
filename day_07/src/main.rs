@@ -46,9 +46,9 @@ fn get_all_totals_from(system: &Directory) -> Vec<usize> {
     sizes
 }
 
-fn get_total_sizes(system: &Directory, mut vec: &mut Vec<usize>) {
+fn get_total_sizes(system: &Directory, vec: &mut Vec<usize>) {
     system.dirs.iter()
-               .for_each(|dir| get_total_sizes(&dir, &mut vec));
+               .for_each(|dir| get_total_sizes(dir, vec));
 
     vec.push(system.total_size)
 }
