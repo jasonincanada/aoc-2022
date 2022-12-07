@@ -6,6 +6,7 @@ Visit the Advent of Code sub-reddit for discussions and other participants' code
 
 | Day | Title                                           | Description                                  |
 | --- | ----------------------------------------------- | -------------------------------------------- |
+| 7   | [No Space Left On Device](./day_07/src/main.rs) | Traverse a file system, counting file sizes  |
 | 6   | [Tuning Trouble](./day_06/src/main.rs)          | Find the first distinct chars in a message   |
 | 5   | [Supply Stacks](./day_05/src/main.rs)           | Rearrange crates in a shipyard               |
 | 4   | [Camp Cleanup](./day_04/src/main.rs)            | Count containing and overlapping ranges      |
