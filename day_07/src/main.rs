@@ -30,7 +30,7 @@ fn part1(input: &Input) -> usize {
 fn part2(input: &Input) -> usize {    
     let mut totals = get_all_totals_from(&input.system);
 
-    let free_at_least = 30000000 - (70000000 - input.system.total_size);
+    let free_at_least = 30_000_000 - (70_000_000 - input.system.total_size);
 
     totals.sort();
     totals.into_iter()
