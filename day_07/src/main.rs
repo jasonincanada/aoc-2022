@@ -129,7 +129,7 @@ fn tally_sizes(node: &mut Directory) -> usize {
 fn at_path_do<F>(node: &mut Directory,
                  path: &[String],
                  operation: F)
-    where F: Fn(&mut Directory) -> ()
+    where F: Fn(&mut Directory)
 {
     // we're at the target path
     if path.is_empty() {
