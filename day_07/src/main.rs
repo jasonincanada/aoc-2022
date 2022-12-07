@@ -28,9 +28,10 @@ fn part1(input: &Input) -> usize {
 
 // find the smallest directory we'd have to delete to free enough space
 fn part2(input: &Input) -> usize {    
-    let mut totals = get_all_totals_from(&input.system);
 
     let free_at_least = 30_000_000 - (70_000_000 - input.system.total_size);
+
+    let mut totals = get_all_totals_from(&input.system);
 
     totals.sort();
     totals.into_iter()
