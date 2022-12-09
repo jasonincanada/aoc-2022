@@ -6,6 +6,7 @@ Visit the Advent of Code sub-reddit for discussions and other participants' code
 
 | Day | Title                                           | Description                                  |
 | --- | ----------------------------------------------- | -------------------------------------------- |
+| 9   | [Rope Bridge](./day_09/src/main.rs)             | Track a rope as it's moved around a grid     |
 | 8   | [Treetop Tree House](./day_08/src/main.rs)      | Count visible trees in a forest              |
 | 7   | [No Space Left On Device](./day_07/src/main.rs) | Traverse a file system, counting file sizes  |
 | 6   | [Tuning Trouble](./day_06/src/main.rs)          | Find the first distinct chars in a message   |
