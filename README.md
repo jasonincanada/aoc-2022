@@ -6,6 +6,7 @@ Visit the Advent of Code sub-reddit for discussions and other participants' code
 
 | Day | Title                                           | Description                                  |
 | --- | ----------------------------------------------- | -------------------------------------------- |
+| 10  | [Cathode-Ray Tube](./day_10/src/main.rs)        | Run a basic CPU to output a word on a screen |
 | 9   | [Rope Bridge](./day_09/src/main.rs)             | Track a rope as it's moved around a grid     |
 | 8   | [Treetop Tree House](./day_08/src/main.rs)      | Count visible trees in a forest              |
 | 7   | [No Space Left On Device](./day_07/src/main.rs) | Traverse a file system, counting file sizes  |
