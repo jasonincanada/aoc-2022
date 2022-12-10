@@ -57,7 +57,7 @@ fn part1(input: &Input) -> usize {
 // see which trees are visible by flying over a line of them
 fn fly_over(mut trees: impl Iterator<Item=u32>) -> Vec<bool> {
 
-    // the first tree in a line always visible
+    // the first tree in a line is always visible
     let mut visible = vec![true];
     let mut highest = trees.next().expect("expected at least one tree in a line");
 
@@ -190,10 +190,12 @@ mod tests {
     }
 
     fn get_example() -> Input {
-        Input::from_string("30373\n\
-        25512\n\
-        65332\n\
-        33549\n\
-        35390")
-    }    
+        Input::from_string(
+            "30373\n\
+             25512\n\
+             65332\n\
+             33549\n\
+             35390"
+        )
+    }
 }
