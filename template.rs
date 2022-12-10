@@ -1,8 +1,7 @@
-/*  https://adventofcode.com/2022/day/4  */
+/*  https://adventofcode.com/2022/day/i  */
 
 fn main() {
     let input = Input::from("input.txt");
-
     println!("Part 1: {}", part1(&input));
     println!("Part 2: {}", part2(&input));
 }
@@ -22,12 +21,14 @@ fn part2(input: &Input) -> u32 {
 impl Input {
     fn from(file: &str) -> Self {
         let contents = std::fs::read_to_string(file).expect("Couldn't read input");
-        let lines = contents.trim().split('\n');
-        
+        Input::from_string(contents.trim())
+    }
+
+    fn from_string(s: &str) -> Self {
         Input {
             field: vec![]
         }
-    }    
+    }
 }
 
 
@@ -38,7 +39,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_() {        
+    fn test_() {
         assert_eq!(1, 1);
+    }
+
+    fn get_example() -> Input {
+        Input::from_string(
+            ""
+        )
     }
 }
