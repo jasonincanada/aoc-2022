@@ -21,8 +21,8 @@ type File = usize;
 fn part1(input: &Input) -> usize {
     let totals = get_all_totals_from(&input.system);
 
-    totals.iter()
-          .filter(|&size| size <= &100000)
+    totals.into_iter()
+          .filter(|&size| size <= 100000)
           .sum()
 }
 
