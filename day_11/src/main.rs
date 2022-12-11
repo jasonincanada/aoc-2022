@@ -8,7 +8,6 @@ fn main() {
 
 struct Input { monkeys: Vec<Monkey> }
 
-#[derive(Clone)]
 struct Monkey {
     items        : Vec<u64>,
     operation    : Operation,
@@ -17,7 +16,7 @@ struct Monkey {
     if_false     : usize
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 enum Operation {
     Multiply(u64),
     Add(u64),
