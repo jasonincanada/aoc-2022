@@ -56,7 +56,7 @@ fn monkey_in_the_middle<F>(monkeys: &Vec<Monkey>,
                                           .map(|monkey| monkey.items.clone())
                                           .collect();
 
-    for _round in 0..rounds {
+    for _ in 0..rounds {
         for (m, monkey) in monkeys.iter().enumerate() {
 
             // drain this monkey's items into their own vector so we can iterate over them,
