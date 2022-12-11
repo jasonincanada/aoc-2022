@@ -10,7 +10,7 @@ struct Input { monkeys: Vec<Monkey> }
 
 #[derive(Clone)]
 struct Monkey {
-    items        : VecDeque<u64>,
+    items        : Vec<u64>,
     operation    : Operation,
     divisible_by : u64,
     if_true      : usize,
@@ -26,7 +26,7 @@ enum Operation {
 
 // 20 rounds and the custom operation to keep from overflowing is to divide by 3
 fn part1(input: &Input) -> usize {    
-    monkey_in_the_middle(input.monkeys.clone(),
+    monkey_in_the_middle(&input.monkeys,
                          20,
                          |worry| worry / 3)
 }
@@ -39,35 +39,43 @@ fn part2(input: &Input) -> usize {
                      .map(|m| m.divisible_by as u32)
                      .product::<u32>() as u64;
 
-    monkey_in_the_middle(input.monkeys.clone(),
+    monkey_in_the_middle(&input.monkeys,
                          10_000,
                          |worry| worry % product_of_divisors)
 }
 
-fn monkey_in_the_middle<F>(mut monkeys: Vec<Monkey>,
-                               rounds: usize,
-                               custom_op: F) -> usize
+fn monkey_in_the_middle<F>(monkeys: &Vec<Monkey>,
+                           rounds: usize,
+                           custom_op: F) -> usize
     where F: Fn(u64) -> u64
 {
     // track the number of inspections by each monkey
     let mut inspections: Vec<usize> = vec![0; monkeys.len()];
 
+    // clone the items queues because we'll be mutating them in place
+    let mut items: Vec<Vec<u64>> = monkeys.iter()
+                                          .map(|monkey| monkey.items.clone())
+                                          .collect();
+
     for _round in 0..rounds {
-        for m in 0..monkeys.len() {
+        for (m, monkey) in monkeys.iter().enumerate() {
+
+            // drain this monkey's items into their own vector so we can iterate over them,
+            // otherwise rust complains about two references to the items vec at the same time
+            let worries: Vec<u64> = items[m].drain(..).collect();
 
             // do an operation on each worry level in the monkey's list
-            while !monkeys[m].items.is_empty() {
-                let worry = monkeys[m].items.pop_front().unwrap();
-                let worry = operate(&monkeys[m].operation, worry);
+            for worry in worries {
+                let worry = operate(&monkey.operation, worry);
                 let worry = custom_op(worry);
 
-                let catcher = if worry % monkeys[m].divisible_by == 0 {
-                                  monkeys[m].if_true
+                let catcher = if worry % monkey.divisible_by == 0 {
+                                  monkey.if_true
                               } else {
-                                  monkeys[m].if_false
+                                  monkey.if_false
                               };
 
-                monkeys[catcher].items.push_back(worry);
+                items[catcher].push(worry);
 
                 // tally an inspection for this monkey
                 inspections[m] += 1;
@@ -147,7 +155,6 @@ impl Operation {
 }
 
 use Operation::*;
-use std::collections::VecDeque;
 
 
 /* Tests */
