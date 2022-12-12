@@ -14,3 +14,6 @@ Cargo.lock
 
 # Don't upload inputs
 input.txt
+
+# Ignore changes to pull.sh (don't accidentally upload our session ID)
+pull.sh
