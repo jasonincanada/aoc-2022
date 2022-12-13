@@ -43,6 +43,16 @@ mod tests {
         assert_eq!(1, 1);
     }
 
+    #[test]
+    fn test_part1() {
+        assert_eq!(part1(&get_example()), 0);
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(part2(&get_example()), 0);
+    }
+
     fn get_example() -> Input {
         Input::from_string(
             ""
