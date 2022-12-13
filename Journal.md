@@ -112,7 +112,7 @@ fn pull_rope_length(moves: &[Move], length: usize) -> usize {
 }
 ```
 
-My `deslackify()` function is a bit funny now that I've reviewed other participants' solutions and found the `sig_num()` function.
+My `deslackify()` function is a bit funny now that I've reviewed other participants' solutions and found the `signum()` function.
 
 
 ## Day 8 - Treetop Tree House
@@ -142,7 +142,7 @@ fn fly_over(mut trees: impl Iterator<Item=u32>) -> Vec<bool> {
 }
 ```
 
-This was the first day (first time ever actually) that I've used AI-generated code, and by simply asking it a question, no less:
+This was the first day (first time ever actually) that I've used AI-generated code, and by simply asking it a question:
 
 ```rust
 // me: "Write a Rust function that converts a string of digits into a Vec<u32>"
@@ -245,7 +245,7 @@ totals.into_iter()
 
 By now I'm wondering if it's still smart to call `.sort()` to mutably sort an object in place before doing anything more on it, or just adding `.sorted()` or `.sort_by()` to the start of an iterator chain. For now I like the idea of practicing switching between in-place updates and immutable chaining, so I leave the sorting step out of the chain.  It's an *O(n log n)* step either way.
 
-Also, first use of `into_iter()` instead of just `iter()`. This makes sense at the end of functions when the vec being iterated over is about to be dropped anyway; you might as well own the variables and be able to reference them directly without having to dereference them with `*`. This isn't as obvious in the above code snippet, since `skip_while` hands a reference to its closure, compared to calling `.map()` after `.into_iter()`, as in Day 12:
+Also, first use of `into_iter()` instead of just `iter()`. This makes sense at the end of functions when the vec being iterated over is about to be dropped anyway; you might as well take ownership of the values and be able to use them directly without having to dereference them with `*`. This isn't as obvious in the above code snippet, since `skip_while` hands a reference to its closure, compared to calling `.map()` after `.into_iter()`, as in Day 12:
 
 ```rust
 positions_of('a', &input.heightmap)
