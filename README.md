@@ -6,6 +6,7 @@ Visit the Advent of Code sub-reddit for discussions and other participants' code
 
 | Day | Title                                           | Description                                  |
 | --- | ----------------------------------------------- | -------------------------------------------- |
+| 14  | [Regolith Reservoir](./day_14/src/main.rs)      | Simulate sand falling in a cave              |
 | 13  | [Distress Signal](./day_13/src/main.rs)         | Order recursive lists of numbers             |
 | 12  | [Hill Climbing Algorithm](./day_12/src/main.rs) | Shortest path algorithms on a grid           |
 | 11  | [Monkey in the Middle](./day_11/src/main.rs)    | Play monkey in the middle                    |
