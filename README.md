@@ -6,6 +6,7 @@ Visit the Advent of Code sub-reddit for discussions and other participants' code
 
 | Day | Title                                           | Description                                  |
 | --- | ----------------------------------------------- | -------------------------------------------- |
+| 16  | [Proboscidea Volcanium](./day_16/src/main.rs)   | Maximum route through tunnels (part 1)       |
 | 15  | [Beacon Exclusion Zone](./day_15/src/main.rs)   | Find the cell not covered by set of beacons  |
 | 14  | [Regolith Reservoir](./day_14/src/main.rs)      | Simulate sand falling in a cave              |
 | 13  | [Distress Signal](./day_13/src/main.rs)         | Order recursive lists of numbers             |
