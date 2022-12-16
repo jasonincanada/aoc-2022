@@ -9,14 +9,17 @@ fn main() {
 struct Input { field : Vec<u32> }
 
 //
-fn part1(input: &Input) -> u32 {
+fn part1(_input: &Input) -> u32 {
     0
 }
 
 //
-fn part2(input: &Input) -> u32 {
+fn part2(_input: &Input) -> u32 {
     0
 }
+
+
+/* Parsing */
 
 impl Input {
     fn from(file: &str) -> Self {
