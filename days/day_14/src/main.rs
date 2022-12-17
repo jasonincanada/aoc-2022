@@ -28,8 +28,8 @@ fn falling_sand(input: &Input, part: usize) -> usize {
     let mut cave = build_cave(&input.paths);
 
     let lowest = input.paths.iter()
-                            .flat_map(|path| path.points.iter().map(|Point {col:_, row}| row))
-                            .max().cloned().unwrap();
+                            .flat_map(|path| path.points.iter().map(|Point {col:_, row}| *row))
+                            .max().unwrap();
 
     let mut sand = Point {col: 500, row: 0};
     let mut rest = 0;
