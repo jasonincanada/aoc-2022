@@ -164,18 +164,26 @@ fn part2(input: &Input) -> u32 {
     best
 }
 
-// TODO: generalize this to any type
 // if the bitstring is 5 (binary 101) then include the 1st and 3rd valves
 fn get_valves_for_bitstring<'a>(bitstring: u32,
                                 count    : usize,
                                 valves   : &[&'a Valve]) -> Vec<&'a Valve>
 {
-    let mut vec: Vec<&Valve> = Vec::with_capacity(count);
+    get_elements_for_bitstring(bitstring, count, valves)
+}
 
-    for (i, valve) in valves.iter().enumerate() {
+fn get_elements_for_bitstring<'a, T>(
+    bitstring: u32,
+    count    : usize,
+    elements : &[&'a T]
+) -> Vec<&'a T>
+{
+    let mut vec: Vec<&T> = Vec::with_capacity(count);
+
+    for (i, el) in elements.iter().enumerate() {
         let anded = bitstring & 2_u32.pow(i as u32);
         if anded > 0 {
-            vec.push(valve);
+            vec.push(el);
         }
     }
 
