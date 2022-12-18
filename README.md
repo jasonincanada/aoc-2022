@@ -6,6 +6,7 @@ Visit the Advent of Code sub-reddit for discussions and other participants' code
 
 | Day | Title                                                | Description                                  |
 | --- | ---------------------------------------------------- | -------------------------------------------- |
+| 18  | [Boiling Boulders](./days/day_18/src/main.rs)        | Count exposed surfaces of a set of cubes     |
 | 17  | [Pyroclastic Flow](./days/day_17/src/main.rs)        | Simulate rocks falling in a chamber (part 1) |
 | 16  | [Proboscidea Volcanium](./days/day_16/src/main.rs)   | Maximum route through tunnels (part 1)       |
 | 15  | [Beacon Exclusion Zone](./days/day_15/src/main.rs)   | Find the cell not covered by set of beacons  |
