@@ -35,7 +35,7 @@ fn part1(input: &Input) -> usize {
 fn part2(input: &Input) -> usize {
 
     // shift everything up diagonally so we can start exploring at the origin and know
-    // there isn't already cube there
+    // there isn't already cube there, and so the flood fill can get around the outside edges
     let cubes: Vec<Cube> = input.cubes.iter()
                                       .map(|c| Cube::new(c.x+1, c.y+1, c.z+1))
                                       .collect();
