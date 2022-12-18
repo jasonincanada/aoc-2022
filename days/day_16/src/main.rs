@@ -75,9 +75,9 @@ fn best_path(distances     : &DistanceGrid,
         pressures.push(best_pressure);
     }
 
-    *pressures.iter()
-              .max()
-              .unwrap_or(&0)
+    pressures.into_iter()
+             .max()
+             .unwrap_or(0)
 }
 
 // compute the shortest distances from each valve to every other valve. call dijkstra
