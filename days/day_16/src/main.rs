@@ -8,9 +8,9 @@ fn main() {
 
 struct Input { valves : Vec<Valve> }
 
-#[derive(Debug, PartialEq)]
 // valves will be stored in a sparse vector by converting their two-letter
 // names into indexes, so don't bother storing the names
+#[derive(Debug, PartialEq)]
 struct Valve {
     index    : usize,
     flow_rate: u32,
