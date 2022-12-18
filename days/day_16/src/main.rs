@@ -8,6 +8,7 @@ fn main() {
 
 struct Input { valves : Vec<Valve> }
 
+#[derive(Debug, PartialEq)]
 // valves will be stored in a sparse vector by converting their two-letter
 // names into indexes, so don't bother storing the names
 struct Valve {
@@ -108,9 +109,82 @@ fn get_distance_grid(valves: &[Valve]) -> DistanceGrid {
 }
 
 // this time we have an elephant to help us. it takes 4 minutes to train him but then
-// he can go around opening valves too
-fn part2(_input: &Input) -> u32 {
-    0
+// he can go around opening valves too. this may seem really complicated: how do we
+// simultaneously keep track of both us and the elephant and make sure we've considered
+// all possible ways for both of us to navigate?
+//
+// but it's pretty easy: since we don't have to visit a valve that's been opened by
+// the elephant, and vice versa, the best solution will be one where we visited a certain
+// set of valves, and the elephant visited valves from the *complement* of our set. so
+// the problem is now to simulate visiting all possible subsets of valves, then adding up
+// the various complements to find the maximum possible pressure from us working together
+fn part2(input: &Input) -> u32 {
+
+    // build the same square grid as in part 1 of shortest distances between all valves
+    let distances: DistanceGrid = get_distance_grid(&input.valves);
+
+    // get the non-zero flow rate valves only
+    let valves = input.valves.iter()
+                             .filter(|v| v.flow_rate > 0)
+                             .collect::<Vec<&Valve>>();
+
+    let count = valves.len();
+
+    // our meagre RAM only holds so much and our CPU is only so quick.
+    // let's allocate for no more than 2^16 valve sets
+    assert!(count <= 16);
+
+    let last_index = 2_u32.pow(count as u32);
+
+    // phase 1: compute and store the result of best_path() for each possible subset of valves
+    let mut pressures: Vec<u32> = vec![ 0; last_index as usize ];
+    
+    for i in 1..last_index {
+        let valve_set: Vec<&Valve> = get_valves_for_bitstring(i, count, &valves);
+        let pressure = best_path(&distances,
+                                 valve_set,
+                                 Valve::index_from("AA"),
+                                 30-4); // subtract 4 minutes to train the elephant
+
+        pressures[i as usize] = pressure;
+    }
+
+    // phase 2: find the best pressure possible when adding the pressure from one set of
+    // valves to its *complement* set of valves. this accounts for both us and the elephant
+    let mut best = 0;
+
+    for us in 1..last_index {
+        let elephant = bitstring_complement(us, count as u32);
+        let sum = pressures[us as usize]
+                + pressures[elephant as usize];
+
+        best = best.max(sum)        
+    }
+
+    best
+}
+
+// TODO: generalize this to any type
+// if the bitstring is 5 (binary 101) then include the 1st and 3rd valves
+fn get_valves_for_bitstring<'a>(bitstring: u32,
+                                count    : usize,
+                                valves   : &[&'a Valve]) -> Vec<&'a Valve>
+{
+    let mut vec: Vec<&Valve> = Vec::with_capacity(count);
+
+    for (i, valve) in valves.iter().enumerate() {
+        let anded = bitstring & 2_u32.pow(i as u32);
+        if anded > 0 {
+            vec.push(valve);
+        }
+    }
+
+    vec
+}
+
+// 011000 -> 100111
+fn bitstring_complement(num: u32, bit_count: u32) -> u32 {
+    !(num as u32) & (2_u32.pow(bit_count)-1)
 }
 
 
@@ -218,11 +292,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_() {
-        assert_eq!(1, 1);
-    }
-
-    #[test]
     fn test_part1() {
         assert_eq!(part1(&get_example()), 1651);
     }
@@ -231,7 +300,45 @@ mod tests {
     fn test_part2() {
         assert_eq!(part2(&get_example()), 1707);
     }
-    
+
+    #[test]
+    fn test_get_valves_for_bitstring() {
+        let valve0 = Valve { index: 0, flow_rate: 1, tunnels: vec![] };
+        let valve1 = Valve { index: 1, flow_rate: 2, tunnels: vec![] };
+        let valve2 = Valve { index: 2, flow_rate: 3, tunnels: vec![] };
+        let valve3 = Valve { index: 3, flow_rate: 4, tunnels: vec![] };
+        let valves = vec![ &valve0, &valve1, &valve2, &valve3 ];
+        
+        let ret = get_valves_for_bitstring(0, valves.len(), &valves);
+        assert_eq!(ret.len(), 0);
+
+        let ret = get_valves_for_bitstring(1, valves.len(), &valves);
+        assert_eq!(ret.len(), 1);
+        assert_eq!(ret[0], &valve0);
+
+        let ret = get_valves_for_bitstring(2, valves.len(), &valves);
+        assert_eq!(ret.len(), 1);
+        assert_eq!(ret[0], &valve1);
+
+        let ret = get_valves_for_bitstring(3, valves.len(), &valves);
+        assert_eq!(ret.len(), 2);
+        assert_eq!(ret[0], &valve0);
+        assert_eq!(ret[1], &valve1);
+
+        let ret = get_valves_for_bitstring(4, valves.len(), &valves);
+        assert_eq!(ret.len(), 1);
+        assert_eq!(ret[0], &valve2);
+    }
+
+    #[test]
+    fn test_bitstring_complement() {
+        assert_eq!(bitstring_complement(0, 4), 0b1111);
+        assert_eq!(bitstring_complement(1, 4), 0b1110);
+        assert_eq!(bitstring_complement(2, 4), 0b1101);
+        assert_eq!(bitstring_complement(15, 4), 0b0000);
+        assert_eq!(bitstring_complement(14, 4), 0b0001);
+    }
+
     #[test]
     fn test_parse_valve() {
         let valve = Valve::from_string("Valve BB has flow rate=13; tunnels lead to valves CC, AA");
@@ -269,3 +376,10 @@ mod tests {
         )
     }
 }
+
+/*  $ time target/release/day_16.exe
+    Part 1: 2119
+    Part 2: 2615
+
+    real    0m10.727s
+*/
