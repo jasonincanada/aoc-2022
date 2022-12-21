@@ -6,6 +6,7 @@ Visit the Advent of Code sub-reddit for discussions and other participants' code
 
 | Day | Title                                                | Description                                  |
 | --- | ---------------------------------------------------- | -------------------------------------------- |
+| 21  | [Monkey Math](./days/day_21/src/main.rs)             | Evaluate expr'n trees, solve for a leaf node |
 | 20  | [Grove Positioning System](./days/day_20/src/main.rs) | Cycle a vector of numbers                   |
 | 19  | [Not Enough Minerals](./days/day_19/src/main.rs)     | Run a robot crafting op (part 1)             |
 | 18  | [Boiling Boulders](./days/day_18/src/main.rs)        | Count exposed surfaces of a set of cubes     |
