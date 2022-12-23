@@ -49,19 +49,19 @@ fn simulate(mut grove: Grove, part: usize) -> usize {
         if part == 1 && round == 10  { break }
         if part == 2 && !elves_moved { return round }
 
-        // cycle proposals
-        cycle_proposals(&mut proposals);
+        // move the first proposal in the list to the end
+        cycle(&mut proposals);
     }
 
     grove.count_empty_tiles()
 }
 
-// move the first proposal in the list to the end
-fn cycle_proposals(props: &mut Vec<Proposal>) {
-    assert!(!props.is_empty());
+// put the first item of a vector at the end
+fn cycle<T>(vec: &mut Vec<T>) {
+    assert!(!vec.is_empty());
 
-    let first = props.remove(0);
-    props.push(first);
+    let first = vec.remove(0);
+    vec.push(first);
 }
 
 
