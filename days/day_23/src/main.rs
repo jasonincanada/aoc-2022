@@ -94,7 +94,7 @@ impl Grove {
             if !self.elves_around(&pos) { continue }
 
             for Proposal { moving, criteria } in proposals.iter() {
-                if !self.elves_around_list(&pos, criteria) {
+                if !self.elves_at(&pos, criteria) {
                     moves.push(
                         (pos.clone(),
                          pos.move_by(moving))
@@ -107,10 +107,10 @@ impl Grove {
         // collect the moves into a hashmap to tally the number of proposals per position
         let mut hashmap: HashMap<Pos, Vec<Elf>> = HashMap::new();
 
-        for p in moves {
-            let elves = hashmap.entry(p.1)
+        for m in moves {
+            let elves = hashmap.entry(m.1)
                                .or_insert_with(Vec::new);
-            elves.push(p.0);
+            elves.push(m.0);
         }
 
         hashmap
@@ -129,7 +129,7 @@ impl Grove {
     }
 
     // check if there are any elves in the given relative positions
-    fn elves_around_list(&self, pos: &Pos, moves: &[Move]) -> bool {
+    fn elves_at(&self, pos: &Pos, moves: &[Move]) -> bool {
         moves.iter()
              .any(|m| { let p = pos.move_by(m);
                         self.grid[p.row][p.col] == ELF
