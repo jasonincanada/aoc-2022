@@ -6,8 +6,9 @@ Visit the Advent of Code sub-reddit for discussions and other participants' code
 
 | Day | Title                                                 | Description                                      |
 | --- | ----------------------------------------------------- | ------------------------------------------------ |
+| 23  | [Unstable Diffusion](./days/day_23/src/main.rs)       | Simulate elves moving around a 2D grid           |
 | 22  | [Monkey Map](./days/day_22/src/main.rs)               | Navigate around an unfolded/folded cube (part 1) |
-| 21  | [Monkey Math](./days/day_21/src/main.rs)              | Evaluate expression trees, solve for leaf node   |
+| 21  | [Monkey Math](./days/day_21/src/main.rs)              | Evaluate expression trees, solve for a leaf node |
 | 20  | [Grove Positioning System](./days/day_20/src/main.rs) | Cycle a vector of numbers                        |
 | 19  | [Not Enough Minerals](./days/day_19/src/main.rs)      | Run a robot crafting op (part 1)                 |
 | 18  | [Boiling Boulders](./days/day_18/src/main.rs)         | Count exposed surfaces of a set of cubes         |
