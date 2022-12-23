@@ -24,6 +24,47 @@ fn part2(input: &Input) -> usize {
 }
 
 
+/* Simulate */
+
+fn simulate(mut grove: Grove, part: usize) -> usize {
+    let mut proposals = get_proposals();
+
+    for round in 1.. {
+        grove.wrap_with_ground_tiles();
+
+        // first half of round, collect the coordinates the elves propose to move to
+        let proposed: HashMap<Pos, Vec<Elf>> = grove.get_proposed_moves(&proposals);
+
+        // second half, an elf moves if they're the only one to propose moving to that tile
+        let mut elves_moved = false;
+
+        for (move_to, elves) in proposed.iter() {
+            // no elf moves to this position if more than one proposed to
+            if elves.len() > 1 { continue }
+
+            grove.move_elf(&elves[0], move_to);
+            elves_moved = true;
+        }
+
+        if part == 1 && round == 10  { break }
+        if part == 2 && !elves_moved { return round }
+
+        // cycle proposals
+        cycle_proposals(&mut proposals);
+    }
+
+    grove.count_empty_tiles()
+}
+
+// move the first proposal in the list to the end
+fn cycle_proposals(props: &mut Vec<Proposal>) {
+    assert!(!props.is_empty());
+
+    let first = props.remove(0);
+    props.push(first);
+}
+
+
 /* Grove */
 
 impl Grove {
@@ -148,45 +189,7 @@ impl Grove {
 }
 
 
-/* Simulate */
-
-fn simulate(mut grove: Grove, part: usize) -> usize {
-    let mut proposals = get_proposals();
-
-    for round in 1.. {
-        grove.wrap_with_ground_tiles();
-
-        // first half of round, collect the coordinates the elves propose to move to
-        let proposed: HashMap<Pos, Vec<Elf>> = grove.get_proposed_moves(&proposals);
-
-        // second half, an elf moves if they're the only one to propose moving to that tile
-        let mut elves_moved = false;
-
-        for (move_to, elves) in proposed.iter() {
-            // no elf moves to this position if more than one proposed to
-            if elves.len() > 1 { continue }
-
-            grove.move_elf(&elves[0], move_to);
-            elves_moved = true;
-        }
-
-        if part == 1 && round == 10  { break }
-        if part == 2 && !elves_moved { return round }
-
-        // cycle proposals
-        cycle_proposals(&mut proposals);
-    }
-
-    grove.count_empty_tiles()
-}
-
-// move the first proposal in the list to the end
-fn cycle_proposals(props: &mut Vec<Proposal>) {
-    assert!(!props.is_empty());
-
-    let first = props.remove(0);
-    props.push(first);
-}
+/* Static Data */
 
 // the four proposals listed in the problem description
 fn get_proposals() -> Vec<Proposal> {
