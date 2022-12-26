@@ -6,6 +6,7 @@ Visit the Advent of Code sub-reddit for discussions and other participants' code
 
 | Day | Title                                                 | Description                                      |
 | --- | ----------------------------------------------------- | ------------------------------------------------ |
+| 24  | [Blizzard Basin](./days/day_24/src/main.rs)           | Navigate through a valley of blizzards (part 1)  |
 | 23  | [Unstable Diffusion](./days/day_23/src/main.rs)       | Simulate elves moving around a 2D grid           |
 | 22  | [Monkey Map](./days/day_22/src/main.rs)               | Navigate around an unfolded/folded cube (part 1) |
 | 21  | [Monkey Math](./days/day_21/src/main.rs)              | Evaluate expression trees, solve for a leaf node |

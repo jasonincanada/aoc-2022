@@ -1,0 +1,439 @@
+/*  https://adventofcode.com/2022/day/24  */
+
+fn main() {
+    let input = Input::from("input.txt");
+    println!("Part 1: {}", part1(&input));
+    println!("Part 2: {}", part2(&input));
+}
+
+struct Input { valley: ValleyMap<bool> }
+
+// compute the fastest way through the valley without getting caught in a blizzard
+fn part1(input: &Input) -> usize {
+
+    // start out at the starting tile at the starting time
+    let start = Tile::Start(0);
+
+    // set up our function for getting a vertex's neighbours
+    let follow_edges = |tile: &Tile| get_neighbours(&input.valley, tile);
+
+    let distances: ValleyMap<usize> = dijkstra(&input.valley, follow_edges, start);
+
+    // get the fastest time to the end goal
+    (0..input.valley.weather_maps)
+        .into_iter()
+        .map(|time| distances[&Tile::Goal(time)])
+        .min()
+        .unwrap_or(0)
+}
+
+
+/* ValleyMap */
+
+// special struct that accounts for each possible place in a valley at any given time,
+// including the start and end positions
+struct ValleyMap<T> {
+    tiles: Vec<T>,
+
+    // size of the interior of the valley (blizzard area)
+    height: usize,
+    width:  usize,
+
+    // number of distinct blizzard maps. they repeat after width*height,
+    // even sooner if gcd(width, height) > 1
+    weather_maps: usize
+}
+
+// a tile is an index into our 3D grid (two space and one time). Start/Goal represent the
+// fixed start and goal positions, where Valley is somewhere on the main grid at some time
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+enum Tile {
+    Valley(usize, usize, usize), // time, row, col
+    Start(usize),                // time
+    Goal(usize)                  // time
+}
+
+// ValleyMap uses a custom indexing system because the grid isn't quite rectangle due to the
+// start and end positions jutting out at the top/bottom, and because time is a dimension,
+// and we want to store it all in one linear vector for constant-time access to elements.
+// it's generic over a type parameter T because we use it for two different things:
+// tracking which positions at which times are not covered in a blizzard (bool), and then
+// in the stortest path algorithm, it tracks minimum distance to each position (usize)
+impl<T> Index<&Tile> for ValleyMap<T> {
+    type Output = T;
+
+    fn index(&self, index: &Tile) -> &Self::Output {
+        let generation_size =   self.width
+                              * self.height
+                              + 2; // start/goal positions
+
+        match index {
+            Tile::Valley(time, row, col)
+                              => &self.tiles[ (time % self.weather_maps) * generation_size
+                                              + row * self.width
+                                              + col ],
+
+            // tuck the start and end cells right after the valley
+            Tile::Start(time) => &self.tiles [ (time % self.weather_maps + 1)
+                                               * generation_size - 2 ],
+
+            Tile::Goal(time)  => &self.tiles [ (time % self.weather_maps + 1)
+                                               * generation_size - 1 ],
+        }
+    }
+}
+
+// same as above but return a &mut ref to the tile so we can update it
+impl<T> IndexMut<&Tile> for ValleyMap<T> {
+    fn index_mut(&mut self, index: &Tile) -> &mut Self::Output {
+        let generation_size = self.width * self.height + 2;
+
+        match index {
+            Tile::Valley(time, row, col)
+                              => &mut self.tiles[ (time % self.weather_maps) * generation_size
+                                                  + row * self.width
+                                                  + col ],
+
+            Tile::Start(time) => &mut self.tiles [ (time % self.weather_maps + 1)
+                                                   * generation_size - 2 ],
+
+            Tile::Goal(time)  => &mut self.tiles [ (time % self.weather_maps + 1)
+                                                   * generation_size - 1 ],
+        }
+    }
+}
+
+impl<T> ValleyMap<T> {
+    // copy the shape of the valley and set all tiles to usize::MAX-1
+    fn to_infinite_distances(&self) -> ValleyMap<usize> {
+        ValleyMap {
+            tiles : self.tiles.iter()
+                        .map(|_| usize::MAX-1 )
+                        .collect(),
+            width : self.width,
+            height: self.height,
+            weather_maps: self.weather_maps
+        }
+    }
+}
+
+// get the available (no blizzard) neighbours in a ValleyMap<bool> in the next unit of time
+fn get_neighbours(valley: &ValleyMap<bool>,
+                  tile  : &Tile) -> Vec<Tile>
+{
+    let mut tiles: Vec<Tile> = vec![];
+
+    let next = |time| (time+1) % valley.weather_maps;
+
+    // move forward one unit in time in all possible directions
+    match tile {
+        Tile::Valley(time, row, col) => {
+            // can we step south/north/east/west from here
+            if *row < valley.height-1 { tiles.push(Tile::Valley(next(time), *row+1, *col  )) }
+            if *row > 0               { tiles.push(Tile::Valley(next(time), *row-1, *col  )) }
+            if *col < valley.width-1  { tiles.push(Tile::Valley(next(time), *row  , *col+1)) }
+            if *col > 0               { tiles.push(Tile::Valley(next(time), *row  , *col-1)) }
+
+            // we can enter the start/goal positions if we're in the exact right cell
+            if *row == 0 && *col == 0 { tiles.push(Tile::Start(next(time))) }
+
+            if    *row == valley.height-1
+               && *col == valley.width-1 { tiles.push(Tile::Goal(next(time))) }
+        },
+        Tile::Start(time) => tiles.push(Tile::Valley(next(time), 0, 0)),
+        Tile::Goal(time)  => tiles.push(Tile::Valley(next(time), valley.height-1, valley.width-1))
+    }
+
+    // move forward in time but stay put at the current position
+    match tile {
+        Tile::Valley(time, row, col) => tiles.push(Tile::Valley(next(time), *row, *col)),
+        Tile::Start(time)            => tiles.push(Tile::Start(next(time))),
+        Tile::Goal(time)             => tiles.push(Tile::Goal(next(time)))
+    }
+
+    // those were all the possible moves given where we were on the board. we still have to
+    // account for the weather, so keep only the positions that are not blizzards
+    tiles.into_iter()
+         .filter(|tile| !valley[tile])
+         .collect()
+}
+
+// build the vertex list for dijkstra. these are all tiles that can be stepped on
+// at a certain time (no blizzard there)
+fn get_vertices(valley: &ValleyMap<bool>) -> Vec<Tile> {
+    let mut vertices: Vec<Tile> = vec![];
+
+    for time in 0..valley.weather_maps {
+        // we can always step into the start/goal positions because no blizzards get there
+        vertices.push(Tile::Start(time));
+        vertices.push(Tile::Goal(time));
+
+        // valley positions get added only if there was no blizzard
+        for row in 0..valley.height {
+        for col in 0..valley.width {
+            let tile = Tile::Valley(time, row, col);
+
+            if !valley[&tile] {
+                vertices.push(tile);
+            }
+        }}
+    }
+
+    vertices
+}
+
+// construct a ValleyMap<bool> from the input, with true wherever/whenever there's a blizzard
+fn valley_from_input(s: &str) -> ValleyMap<bool> {
+    let lines   = s.lines().collect::<Vec<&str>>();
+    let weather = Weather::from_strings(&lines[1..lines.len()-1]);
+    let height  = weather.height;
+    let width   = weather.width;
+
+    assert!(height >= 1);
+    assert!(width  >= 1);
+
+    // the blizzards loop around forever and never turn, so a whole weather map
+    // will repeat after width*height time. if we're lucky we'll have gcd > 1
+    // which reduces our search space even further
+    let gcd = num::integer::gcd(height, width);
+    let weather_maps = height * width / gcd;
+
+    // allocate a tile for each position in the valley plus the start and goal
+    // positions, multiplied by the number of different weather pictures
+    let tiles: Vec<bool> = vec![ false; weather_maps * (height * width + 2) ];
+
+    let mut valley: ValleyMap<bool> = ValleyMap {
+        tiles,
+        height,
+        width,
+        weather_maps
+    };
+
+    // mark true when/where there's a blizzard. after these are set we don't have
+    // to keep track of the direction or number of blizzards on a tile, just that
+    // there was at least one blizzard there at that time
+    for (r, row) in weather.tiles.iter().enumerate() {
+        for (c, &tile) in row.iter().enumerate() {
+
+            match tile {
+                '>' => for time in 0..valley.weather_maps {
+                           let index = Tile::Valley(time, r, (time + c) % width);
+                           valley[&index] = true;
+                       },
+                '<' => for time in 0..valley.weather_maps {
+                           let index = Tile::Valley(time, r, ((c + time*width) - time) % width);
+                           valley[&index] = true;
+                       },
+                'v' => for time in 0..valley.weather_maps {
+                           let index = Tile::Valley(time, (time + r) % height, c);
+                           valley[&index] = true;
+                       },
+                '^' => for time in 0..valley.weather_maps {
+                           let index = Tile::Valley(time, ((r + time*height) - time) % height, c);
+                           valley[&index] = true;
+                       },
+                '.' => {},
+                 w  => panic!("unknown weather {w}")
+            }
+        }
+    }
+    valley
+}
+
+struct Weather {
+    tiles:  Vec<Vec<char>>,
+    height: usize,
+    width:  usize
+}
+
+impl Weather {
+    /*  #.....#
+        #>....#
+        #.....#
+        #...v.#
+        #.....#
+    */
+    fn from_strings(s: &[&str]) -> Self {
+        let tiles: Vec<Vec<char>> = s.iter()
+                                     .map(|line| &line[1..line.len()-1])
+                                     .map(|line| line.chars().collect())
+                                     .collect();
+
+        let width  = tiles[0].len();
+        let height = tiles.len();
+
+        Weather {
+            tiles,
+            width,
+            height
+        }
+    }
+}
+
+
+/* Dijkstra for ValleyMap */
+
+// start at the given tile and find the shortest path to all reachable tiles
+fn dijkstra(valley    : &ValleyMap<bool>,
+            neighbours: impl Fn(&Tile) -> Vec<Tile>,
+            start     : Tile) -> ValleyMap<usize>
+{
+    // initialize map of "infinite" distances
+    let mut distance_to: ValleyMap<usize> = valley.to_infinite_distances();
+
+    // queue up every vertex
+    let mut queue: HashSet<Tile> = get_vertices(valley).into_iter().collect();
+
+    // set the first known distance: 0 from the start to the start
+    distance_to[&start] = 0;
+
+    while !queue.is_empty() {
+
+        // this algo takes a while for our 650k vertices so print status reports
+        if queue.len() % 100 == 0 {
+            println!("Dijkstra: {} vertices left", queue.len());
+        }
+
+        // find the position in the queue with shortest distance from the start
+        let u = *queue.iter()
+                      .min_by(|&a, &b| distance_to[a].cmp(&distance_to[b]))
+                      .unwrap();
+
+        queue.remove(&u);
+
+        // get all vertices adjacent to this one that are still in the queue
+        let neighbours: Vec<Tile> = neighbours(&u).into_iter()
+                                                  .filter(|v| queue.contains(v))
+                                                  .collect();
+
+        for v in neighbours {
+            // a step to a neighbouring vertex always takes 1 minute
+            let alt = distance_to[&u] + 1;
+
+            if alt < distance_to[&v] {
+                distance_to[&v] = alt;
+            }
+        }
+    }
+
+    distance_to
+}
+
+// zig-zag from start to goal, back to start, then back to goal again
+fn part2(_input: &Input) -> usize {
+    0
+}
+
+
+/* Imports */
+
+use std::collections::HashSet;
+use std::hash::Hash;
+use std::ops::{Index, IndexMut};
+
+
+/* Parsing */
+
+impl Input {
+    fn from(file: &str) -> Self {
+        let contents = std::fs::read_to_string(file).expect("Couldn't read input");
+        Input::from_string(contents.trim())
+    }
+
+    fn from_string(s: &str) -> Self {
+        Input {
+            valley: valley_from_input(s)
+        }
+    }
+}
+
+
+/* Tests */
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_weather_from_string() {
+        let weather = Weather::from_strings(&["#.....#",
+                                              "#>....#",
+                                              "#.....#",
+                                              "#...v.#",
+                                              "#.....#"]);
+
+        assert_eq!(weather.tiles.len(), 5);
+        assert_eq!(weather.tiles[1][0], '>');
+        assert_eq!(weather.tiles[1][1], '.');
+        assert_eq!(weather.tiles[3][3], 'v');
+        assert_eq!(weather.tiles[3].len(), 5);
+    }
+
+    #[test]
+    fn test_part1() {
+        assert_eq!(part1(&get_example()), 18);
+    }
+
+    // #[test]
+    fn test_part2() {
+        assert_eq!(part2(&get_example()), 54);
+    }
+
+    #[test]
+    fn test_valley_from_weather_map() {
+        let valley = get_simple_valley();
+
+        // east-moving blizzard
+        assert!(!valley[&Tile::Valley(0, 1, 1)]); // there's not yet one to the east
+        assert!(valley[&Tile::Valley(0, 1, 0)]);
+        assert!(valley[&Tile::Valley(1, 1, 1)]);
+        assert!(valley[&Tile::Valley(2, 1, 2)]);
+        assert!(valley[&Tile::Valley(3, 1, 3)]);
+        assert!(valley[&Tile::Valley(4, 1, 4)]);
+        assert!(valley[&Tile::Valley(5, 1, 0)]); // time should wrap around to 0
+
+        // west
+        assert!(valley[&Tile::Valley(0, 2, 1)]);
+        assert!(valley[&Tile::Valley(1, 2, 0)]);
+        assert!(valley[&Tile::Valley(2, 2, 4)]);
+        assert!(valley[&Tile::Valley(3, 2, 3)]);
+        assert!(valley[&Tile::Valley(4, 2, 2)]);
+
+        // south
+        assert!(valley[&Tile::Valley(0, 3, 3)]);
+        assert!(valley[&Tile::Valley(1, 4, 3)]);
+        assert!(valley[&Tile::Valley(2, 0, 3)]);
+        assert!(valley[&Tile::Valley(3, 1, 3)]);
+        assert!(valley[&Tile::Valley(4, 2, 3)]);
+        assert!(valley[&Tile::Valley(5, 3, 3)]);
+
+        // north
+        assert!(valley[&Tile::Valley(0, 0, 2)]);
+        assert!(valley[&Tile::Valley(1, 4, 2)]);
+        assert!(valley[&Tile::Valley(2, 3, 2)]);
+        assert!(valley[&Tile::Valley(3, 2, 2)]);
+        assert!(valley[&Tile::Valley(4, 1, 2)]);
+        assert!(valley[&Tile::Valley(5, 0, 2)]);
+    }
+
+    fn get_example() -> Input {
+        Input::from_string(
+            "#.######\n\
+             #>>.<^<#\n\
+             #.<..<<#\n\
+             #>v.><>#\n\
+             #<^v^^>#\n\
+             ######.#"
+        )
+    }
+
+    fn get_simple_valley() -> ValleyMap<bool> {
+        valley_from_input("#.#####\n\
+                           #..^..#\n\
+                           #>....#\n\
+                           #.<...#\n\
+                           #...v.#\n\
+                           #.....#\n\
+                           #####.#")
+    }
+}
