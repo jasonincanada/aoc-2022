@@ -58,7 +58,7 @@ enum Tile {
 // and we want to store it all in one linear vector for constant-time access to elements.
 // it's generic over a type parameter T because we use it for two different things:
 // tracking which positions at which times are not covered in a blizzard (bool), and then
-// in the stortest path algorithm, it tracks minimum distance to each position (usize)
+// in the shortest path algorithm, it tracks minimum distance to each position (usize)
 impl<T> Index<&Tile> for ValleyMap<T> {
     type Output = T;
 
