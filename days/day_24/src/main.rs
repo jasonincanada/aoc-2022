@@ -127,29 +127,30 @@ fn get_neighbours(valley: &ValleyMap<bool>,
     let next = |time| (time+1) % valley.weather_maps;
 
     // move forward one unit in time in all possible directions
+    use Tile::*;
     match tile {
-        Tile::Valley(time, row, col) => {
+        Valley(time, row, col) => {
             // can we step south/north/east/west from here
-            if *row < valley.height-1 { tiles.push(Tile::Valley(next(time), *row+1, *col  )) }
-            if *row > 0               { tiles.push(Tile::Valley(next(time), *row-1, *col  )) }
-            if *col < valley.width-1  { tiles.push(Tile::Valley(next(time), *row  , *col+1)) }
-            if *col > 0               { tiles.push(Tile::Valley(next(time), *row  , *col-1)) }
+            if *row < valley.height-1 { tiles.push(Valley(next(time), *row+1, *col  )) }
+            if *row > 0               { tiles.push(Valley(next(time), *row-1, *col  )) }
+            if *col < valley.width-1  { tiles.push(Valley(next(time), *row  , *col+1)) }
+            if *col > 0               { tiles.push(Valley(next(time), *row  , *col-1)) }
 
             // we can enter the start/goal positions if we're in the exact right cell
-            if *row == 0 && *col == 0 { tiles.push(Tile::Start(next(time))) }
+            if *row == 0 && *col == 0 { tiles.push(Start(next(time))) }
 
             if    *row == valley.height-1
-               && *col == valley.width-1 { tiles.push(Tile::Goal(next(time))) }
+               && *col == valley.width-1 { tiles.push(Goal(next(time))) }
         },
-        Tile::Start(time) => tiles.push(Tile::Valley(next(time), 0, 0)),
-        Tile::Goal(time)  => tiles.push(Tile::Valley(next(time), valley.height-1, valley.width-1))
+        Start(time) => tiles.push(Valley(next(time), 0, 0)),
+        Goal(time)  => tiles.push(Valley(next(time), valley.height-1, valley.width-1))
     }
 
     // move forward in time but stay put at the current position
     match tile {
-        Tile::Valley(time, row, col) => tiles.push(Tile::Valley(next(time), *row, *col)),
-        Tile::Start(time)            => tiles.push(Tile::Start(next(time))),
-        Tile::Goal(time)             => tiles.push(Tile::Goal(next(time)))
+        Valley(time, row, col) => tiles.push(Valley(next(time), *row, *col)),
+        Start(time)            => tiles.push(Start(next(time))),
+        Goal(time)             => tiles.push(Goal(next(time)))
     }
 
     // those were all the possible moves given where we were on the board. we still have to
