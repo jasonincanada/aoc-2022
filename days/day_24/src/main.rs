@@ -20,7 +20,7 @@ fn part1(input: &Input) -> usize {
     // breadth-first search to goal positions
     let distances: ValleyMap<Option<usize>> = bfs(&input.valley, follow_edges, start);
 
-    // get the fastest time to the end goal
+    // get the fastest time to the goal
     (0..input.valley.weather_maps)
         .into_iter()
         .map(|time| distances[&Tile::Goal(time)].unwrap())
@@ -32,7 +32,7 @@ fn part1(input: &Input) -> usize {
 /* ValleyMap */
 
 // special struct that accounts for each possible place in a valley at any given time,
-// including the start and end positions
+// including the start and goal positions
 struct ValleyMap<T> {
     tiles: Vec<T>,
 
@@ -55,9 +55,9 @@ enum Tile {
 }
 
 // ValleyMap uses a custom indexing system because the grid isn't quite rectangle due to the
-// start and end positions jutting out at the top/bottom, and because time is a dimension,
+// start and goal positions jutting out at the top/bottom, and because time is a dimension,
 // and we want to store it all in one linear vector for constant-time access to elements.
-// it's generic over a type parameter T because we use it for two different things:
+// it's generic over the type parameter T because we use it for two different things:
 // tracking which positions at which times are not covered in a blizzard (bool), and then
 // in the shortest path algorithm, it tracks minimum distance to each position (usize)
 impl<T> Index<&Tile> for ValleyMap<T> {
@@ -74,7 +74,7 @@ impl<T> Index<&Tile> for ValleyMap<T> {
                                               + row * self.width
                                               + col ],
 
-            // tuck the start and end cells right after the valley
+            // tuck the start and goal cells right after the valley
             Tile::Start(time) => &self.tiles [ (time % self.weather_maps + 1)
                                                * generation_size - 2 ],
 
@@ -105,7 +105,7 @@ impl<T> IndexMut<&Tile> for ValleyMap<T> {
 }
 
 impl<T> ValleyMap<T> {
-    // copy the shape of the valley and set all tiles to usize::MAX-1
+    // copy the shape of the valley and set all tiles to None (distance not yet computed)
     fn to_initialized_distances(&self) -> ValleyMap<Option<usize>> {
         ValleyMap {
             tiles : self.tiles.iter()
