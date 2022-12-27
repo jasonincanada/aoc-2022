@@ -434,7 +434,7 @@ mod tests {
 
 /*  $ time target/release/day_24.exe
     Part 1: 290
-    Part 2: 0
+    Part 2: 842
 
-    real    0m0.159s
+    real    0m0.556s
 */
