@@ -18,12 +18,12 @@ fn part1(input: &Input) -> usize {
     let follow_edges = |tile: &Tile| get_neighbours(&input.valley, tile);
 
     // breadth-first search to goal positions
-    let distances: ValleyMap<usize> = bfs(&input.valley, follow_edges, start);
+    let distances: ValleyMap<Option<usize>> = bfs(&input.valley, follow_edges, start);
 
     // get the fastest time to the end goal
     (0..input.valley.weather_maps)
         .into_iter()
-        .map(|time| distances[&Tile::Goal(time)])
+        .map(|time| distances[&Tile::Goal(time)].unwrap())
         .min()
         .unwrap_or(0)
 }
@@ -106,10 +106,10 @@ impl<T> IndexMut<&Tile> for ValleyMap<T> {
 
 impl<T> ValleyMap<T> {
     // copy the shape of the valley and set all tiles to usize::MAX-1
-    fn to_infinite_distances(&self) -> ValleyMap<usize> {
+    fn to_initialized_distances(&self) -> ValleyMap<Option<usize>> {
         ValleyMap {
             tiles : self.tiles.iter()
-                        .map(|_| usize::MAX-1 )
+                        .map(|_| None )
                         .collect(),
             width : self.width,
             height: self.height,
@@ -253,13 +253,13 @@ impl Weather {
 // start at the given tile and find the distances to all reachable tiles
 fn bfs(valley    : &ValleyMap<bool>,
        neighbours: impl Fn(&Tile) -> Vec<Tile>,
-       start     : Tile) -> ValleyMap<usize>
+       start     : Tile) -> ValleyMap<Option<usize>>
 {
-    // initialize map of "infinite" distances
-    let mut distance_to: ValleyMap<usize> = valley.to_infinite_distances();
+    // initialize map of distances
+    let mut distance_to: ValleyMap<Option<usize>> = valley.to_initialized_distances();
 
     // set the first known distance: 0 from the start to the start
-    distance_to[&start] = 0;
+    distance_to[&start] = Some(0);
 
     // queue up the starting vertex
     let mut queue: Vec<Tile> = vec![start];
@@ -272,11 +272,11 @@ fn bfs(valley    : &ValleyMap<bool>,
 
         // get all vertices adjacent to this one that haven't been explored yet
         let neighbours: Vec<Tile> = neighbours(&u).into_iter()
-                                                  .filter(|v| distance_to[v] == usize::MAX-1)
+                                                  .filter(|v| distance_to[v].is_none())
                                                   .collect();
 
         for v in neighbours {            
-            distance_to[&v] = distance_to[&u] + 1;
+            distance_to[&v] = Some(distance_to[&u].unwrap() + 1);
             queue.push(v);
         }
     }
@@ -405,5 +405,5 @@ mod tests {
     Part 1: 290
     Part 2: 0
 
-    real    0m0.149s
+    real    0m0.159s
 */
