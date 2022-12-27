@@ -17,7 +17,8 @@ fn part1(input: &Input) -> usize {
     // set up our function for getting a vertex's neighbours
     let follow_edges = |tile: &Tile| get_neighbours(&input.valley, tile);
 
-    let distances: ValleyMap<usize> = dijkstra(&input.valley, follow_edges, start);
+    // breadth-first search to goal positions
+    let distances: ValleyMap<usize> = bfs(&input.valley, follow_edges, start);
 
     // get the fastest time to the end goal
     (0..input.valley.weather_maps)
@@ -46,7 +47,7 @@ struct ValleyMap<T> {
 
 // a tile is an index into our 3D grid (two space and one time). Start/Goal represent the
 // fixed start and goal positions, where Valley is somewhere on the main grid at some time
-#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 enum Tile {
     Valley(usize, usize, usize), // time, row, col
     Start(usize),                // time
@@ -158,30 +159,6 @@ fn get_neighbours(valley: &ValleyMap<bool>,
          .collect()
 }
 
-// build the vertex list for dijkstra. these are all tiles that can be stepped on
-// at a certain time (no blizzard there)
-fn get_vertices(valley: &ValleyMap<bool>) -> Vec<Tile> {
-    let mut vertices: Vec<Tile> = vec![];
-
-    for time in 0..valley.weather_maps {
-        // we can always step into the start/goal positions because no blizzards get there
-        vertices.push(Tile::Start(time));
-        vertices.push(Tile::Goal(time));
-
-        // valley positions get added only if there was no blizzard
-        for row in 0..valley.height {
-        for col in 0..valley.width {
-            let tile = Tile::Valley(time, row, col);
-
-            if !valley[&tile] {
-                vertices.push(tile);
-            }
-        }}
-    }
-
-    vertices
-}
-
 // construct a ValleyMap<bool> from the input, with true wherever/whenever there's a blizzard
 fn valley_from_input(s: &str) -> ValleyMap<bool> {
     let lines   = s.lines().collect::<Vec<&str>>();
@@ -271,48 +248,36 @@ impl Weather {
 }
 
 
-/* Dijkstra for ValleyMap */
+/* Breadth-First Search for ValleyMap */
 
-// start at the given tile and find the shortest path to all reachable tiles
-fn dijkstra(valley    : &ValleyMap<bool>,
-            neighbours: impl Fn(&Tile) -> Vec<Tile>,
-            start     : Tile) -> ValleyMap<usize>
+// start at the given tile and find the distances to all reachable tiles
+fn bfs(valley    : &ValleyMap<bool>,
+       neighbours: impl Fn(&Tile) -> Vec<Tile>,
+       start     : Tile) -> ValleyMap<usize>
 {
     // initialize map of "infinite" distances
     let mut distance_to: ValleyMap<usize> = valley.to_infinite_distances();
 
-    // queue up every vertex
-    let mut queue: HashSet<Tile> = get_vertices(valley).into_iter().collect();
-
     // set the first known distance: 0 from the start to the start
     distance_to[&start] = 0;
 
-    while !queue.is_empty() {
+    // queue up the starting vertex
+    let mut queue: Vec<Tile> = vec![start];
+    let mut index = 0;
 
-        // this algo takes a while for our 650k vertices so print status reports
-        if queue.len() % 100 == 0 {
-            println!("Dijkstra: {} vertices left", queue.len());
-        }
+    while index < queue.len() {
 
-        // find the position in the queue with shortest distance from the start
-        let u = *queue.iter()
-                      .min_by(|&a, &b| distance_to[a].cmp(&distance_to[b]))
-                      .unwrap();
+        let u: Tile = queue[index].clone();
+        index += 1;
 
-        queue.remove(&u);
-
-        // get all vertices adjacent to this one that are still in the queue
+        // get all vertices adjacent to this one that haven't been explored yet
         let neighbours: Vec<Tile> = neighbours(&u).into_iter()
-                                                  .filter(|v| queue.contains(v))
+                                                  .filter(|v| distance_to[v] == usize::MAX-1)
                                                   .collect();
 
-        for v in neighbours {
-            // a step to a neighbouring vertex always takes 1 minute
-            let alt = distance_to[&u] + 1;
-
-            if alt < distance_to[&v] {
-                distance_to[&v] = alt;
-            }
+        for v in neighbours {            
+            distance_to[&v] = distance_to[&u] + 1;
+            queue.push(v);
         }
     }
 
@@ -327,8 +292,6 @@ fn part2(_input: &Input) -> usize {
 
 /* Imports */
 
-use std::collections::HashSet;
-use std::hash::Hash;
 use std::ops::{Index, IndexMut};
 
 
@@ -437,3 +400,10 @@ mod tests {
                            #####.#")
     }
 }
+
+/*  $ time target/release/day_24.exe
+    Part 1: 290
+    Part 2: 0
+
+    real    0m0.149s
+*/
