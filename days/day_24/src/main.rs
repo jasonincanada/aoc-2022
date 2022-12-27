@@ -285,8 +285,43 @@ fn bfs(valley    : &ValleyMap<bool>,
 }
 
 // zig-zag from start to goal, back to start, then back to goal again
-fn part2(_input: &Input) -> usize {
-    0
+fn part2(input: &Input) -> usize {
+    zig_zag(&input.valley, 3, true, 0)
+}
+
+fn zig_zag(valley         : &ValleyMap<bool>,
+           trips_left     : usize,
+           direction      : bool,
+           distance_so_far: usize) -> usize
+{
+    if trips_left == 0 {
+        return distance_so_far
+    }
+
+    let distances = explore(valley,
+                            if direction { Tile::Start(distance_so_far) }
+                                    else { Tile::Goal (distance_so_far) } );
+
+    let time = (0..valley.weather_maps)
+        .into_iter()
+        .map(|time| if direction { distances[&Tile::Goal (time)].unwrap() }
+                            else { distances[&Tile::Start(time)].unwrap() } )
+        .min()
+        .unwrap();
+
+    zig_zag(valley,
+            trips_left - 1,
+            !direction,
+            distance_so_far + time)
+}
+
+fn explore(valley: &ValleyMap<bool>,
+           start : Tile) -> ValleyMap<Option<usize>>
+{
+    let follow_edges = |tile: &Tile| get_neighbours(valley, tile);
+    let distances = bfs(valley, follow_edges, start);
+
+    distances
 }
 
 
@@ -332,15 +367,11 @@ mod tests {
         assert_eq!(weather.tiles[3].len(), 5);
     }
 
-    #[test]
-    fn test_part1() {
-        assert_eq!(part1(&get_example()), 18);
-    }
+    #[test] fn test_part1() { assert_eq!(part1(&get_example()), 18); }
+    #[test] fn test_part2() { assert_eq!(part2(&get_example()), 54); }
 
-    // #[test]
-    fn test_part2() {
-        assert_eq!(part2(&get_example()), 54);
-    }
+    #[test] fn test_part1_mine() { assert_eq!(part1(&Input::from("input.txt")), 290); }
+    #[test] fn test_part2_mine() { assert_eq!(part2(&Input::from("input.txt")), 842); }
 
     #[test]
     fn test_valley_from_weather_map() {
