@@ -47,7 +47,7 @@ struct ValleyMap<T> {
 
 // a tile is an index into our 3D grid (two space and one time). Start/Goal represent the
 // fixed start and goal positions, where Valley is somewhere on the main grid at some time
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 enum Tile {
     Valley(usize, usize, usize), // time, row, col
     Start(usize),                // time
