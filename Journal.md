@@ -1,4 +1,309 @@
-Advent this year for me is a chance to improve my Rust skills. Below is a brief overview of new things I tried per day, sort of an evolution of my experience with Rust:
+Advent this year for me was a chance to improve my Rust skills. Below is a brief overview of new things I tried per day, sort of an evolution of my experience with Rust:
+
+## Day 25 - Full of Hot Air
+
+Hey man, I don't work on Jesus' birthday, so I didn't do today's puzzles. That and I couldn't figure out how to convert back from decimal to SNAFU format, thanks to the negative multiples of five throwing a wrench into the gears, so I managed to finish neither part today.
+
+
+## Day 24 - Blizzard Basin
+
+This was my favourite day this year and the solution I'm most happy with even though it's slightly over-engineered. My first attempt after reading the description was the obvious naive one: track where each blizzard is at all times, mutably stepping them across the board as I explore the movement decision tree. I noticed early on that the blizzard maps repeat after `width*height` iterations since their trajectories are perfectly straight and they wrap around predictably at the ends of the valley. So my first attempt at making it more efficient was to compute all the valleys ahead of time and loop through the pre-computed ones while exploring the tree.  I stored the main map as a `Vec<Vec<Vec<char>>>` but before long there was obvious code smell, with functions like this one:
+
+```rust
+fn is_wall(tile: &Vec<char>) -> bool {
+    tile.len() == 1 && tile[0] == WALL
+}
+```
+
+I started thinking functionally about the problem, and what benefits I could get from a more immutable approach.  A separation of concerns turned out to be a smart way to think about the problem, and before long I had `ValleyMap<T>` figured out as the smallest data structure that could be used to store all positions in a valley at all times. The generic `<T>` type parameter allows the separation of the problem into two distinct conceptual phases: computing which cells at which times have no blizzards (`T ~ bool`), which is done during parsing; then using the same shape of valley to store the distance from the start to every reachable position (`T ~ Option<usize>`) with an fmap-like operation to copy the shape but change all the tiles to `None`:
+
+```rust
+// copy the shape of the valley and set all tiles to None (distance not yet computed)
+fn to_initialized_distances(&self) -> ValleyMap<Option<usize>> {
+	ValleyMap {
+		tiles : self.tiles.iter()
+					.map(|_| None )
+					.collect(),
+		width : self.width,
+		height: self.height,
+		weather_maps: self.weather_maps
+	}
+}
+```
+
+As a bonus this gave me the opportunity to implement a pair of Rust traits: `Index` and `IndexMut`. This type of scenario is exactly what they're for: setting up a custom indexing system into a custom data structure that is more complicated than a simple offset into a vector. This allows succinct structure updates at a specific position using normal indexing syntax, as in the distance-updating part of `bfs()`:
+
+```rust
+for v in neighbours {            
+	distance_to[&v] = Some(distance_to[&u].unwrap() + 1);
+	queue.push(v);
+}
+```
+
+The index uses a custom sum type (enum) `Tile` that captures the three types of positions, with the added time dimension running off into the distance for all three.
+
+```rust
+// a tile is an index into our 3D grid (two space and one time). Start/Goal represent the
+// fixed start and goal positions, Valley is somewhere on the main grid
+enum Tile {
+    Valley(usize, usize, usize), // time, row, col
+    Start(usize),                // time
+    Goal(usize)                  // time
+}
+```
+
+Until this separation I was bending over backwards to treat the start and goal positions like their own x/y coordinates on a larger grid. At first I even shifted the grid down and added a `#` above the start position so it would look like any other wall that the stepping logic would run into and ignore. After the separation the start and goal positions are now logical ideas, not physical ones, and the overall solution in my view is much cleaner.
+
+A second benefit of the immutability approach was obvious when considering the blizzards and how to store where they were at what times. There is now no concept of mutably removing a blizzard from one cell and pushing it onto another. Since the grid goes off in an orthogonal time direction, and the blizzards all loop around after `width*height`, we only have to spray each blizzard individually across each unit of time, wrapping accordingly. This way we never have to track a bunch of blizzards on one tile at one time: just that there was any blizzard on a tile at that exact time. This de-smells the code significantly; in particular, we only use each blizzard's ASCII representation (`>`, `<`, `v`, `^`) exactly once in the file, in the `valley_from_input()` function, taking care of the "moving" of the blizzards in one swoop:
+
+```rust
+// mark true when/where there's a blizzard. after these are set we don't have
+// to keep track of the direction or number of blizzards on a tile, just that
+// there was at least one blizzard there at that time
+for (r, row) in weather.tiles.iter().enumerate() {
+	for (c, &tile) in row.iter().enumerate() {
+
+		match tile {
+			'>' => for time in 0..valley.weather_maps {
+					   let index = Tile::Valley(time, r, (time + c) % width);
+					   valley[&index] = true;
+				   },
+			'<' => for time in 0..valley.weather_maps {
+					   let index = Tile::Valley(time, r, ((c + time*width) - time) % width);
+					   valley[&index] = true;
+				   },
+			'v' => for time in 0..valley.weather_maps {
+					   let index = Tile::Valley(time, (time + r) % height, c);
+					   valley[&index] = true;
+				   },
+			'^' => for time in 0..valley.weather_maps {
+					   let index = Tile::Valley(time, ((r + time*height) - time) % height, c);
+					   valley[&index] = true;
+				   },
+			'.' => {},
+			 w  => panic!("unknown weather {w}")
+		}
+	}
+}
+```
+
+Part two looked at first like it could pose a big challenge. We have to zig-zag back and forth 3 trips across the valley. Is it as simple as I hope? Can we just run three separate `bfs()` searches using the end of one round as the stepping-off point for the next round? It turns out we can. I was worried there would be an overall benefit to taking a less-than-optimal route through the valley in one direction if it enabled an even quicker trip in the opposite direction by the time the weather was all taken into account. But it seems--at least for my input--that the simpler idea to just run as fast as possible all three ways works fine, and it answers the second part successfully.
+
+Even with the advent of `ValleyMap<T>` and its immutable character, it still took a really long time to finish even the first part. I added some print statements to get a report of how many of the 650k starting vertices were left for dijkstra to check, and it was dwindling down slowly enough that I took a couple hour nap and woke up some time after it finished.  It hit me that there might be a quicker way to do the search given that the edge weights were all the same 1 distance. I [confirmed this idea with ChatGPT](https://sharegpt.com/c/bzC8YtK) and switched from dijkstra to a much faster breadth-first search algorithm. This pulled a nasty `O(n log n)` step out of the inner search loop, and all said and done, both parts now finish in about half a second instead of a few hours.
+
+Over the weeks of this competition, ChatGPT's interface had a couple improvements, most notably that your questions and answers are stored in a table-of-contents on the left hand side instead of disappearing forever once you closed the tab.  It even smartly titles your queries for you; in the case of the above: "Dijkstra vs BFS Comparison".  I still give it the suspicious eye though, since the internals itself are probably no better than they were at the start of the month: worthy of heavy skepticism and not to be used seriously unless you have the aptitude to think critically about its responses.
+
+
+## Day 23 - Unstable Diffusion
+
+Finally the year's cellular automata puzzle. The rules are easy to understand and code so this one wasn't very difficult despite being so late in the year. Based on the sub-reddit's discussions for this day it looks like I took the relatively uncommon path of representing the data in a `Vec<Vec<char>>` instead of a hashset of positions or some other structure. This gave me constant-time updates of the elf positions, but left me with the tiresome concern for out-of-bounds indexing errors, since the vectors are 0-based and length-limited, while the elves are meandering around seemingly at random. However, knowing they can only move a maximum of one distance per turn, at the beginning of each turn I apply the slightly wasteful step of wrapping the whole grid in a rectangle of spaces:
+
+```rust
+impl Grove {
+    // wrap a rectangle of empty tiles around the grid. called at the start of
+    // every round to make sure there's enough space to index within bounds
+    fn wrap_with_ground_tiles(&mut self) {
+        for row in self.grid.iter_mut() {
+            row.insert(0, GROUND);
+            row.push(GROUND);
+        }
+
+        self.grid.insert(0, vec![ GROUND; self.grid[0].len()]);
+        self.grid.push(     vec![ GROUND; self.grid[0].len()]);
+    }
+}
+```
+
+The available space will stay just ahead of the most expansive wandering efforts by all the elves. Other than that, a technically easy day with no real opportunities to find anything clever or innovative to do.
+
+
+## Day 22 - Monkey Map
+
+Easy first part, very difficult second part. I spent a couple nights unfolding and flipping 3D cubes in my head and couldn't figure out how to make it general across all possible cube unfoldings instead of just the sample and my input, which I could have manually marked up with a relatively small amount of effort.
+
+- *Okay:* Hand-code both
+- *Better:* Hand-describe the edge mapping
+- *Betterer:* Hand-describe using the smallest amount of information, automatically derive the rest
+- *Best:* Fully general unfolding while tracking edge mappings
+
+I had this hilarious exchange with ChatGPT about cube diagrams: https://sharegpt.com/c/QkFg0n4. I've grown weary of using ChatGPT for anything technical lately; the first couple code clips I got early in the challenge were correct, but it's been off the mark with many other things. It's confidently wrong a lot of the time, which is good for a laugh in a casual competition like this, but should serve as a warning not to trust it blindly for anything important. It's great for creative prompts (a brilliant solution to writer's block, I'm sure authors will discover), and casual banter, but its technical solutions need to be met with a good deal of critical thinking.
+
+
+## Day 21 - Monkey Math
+
+Recursive expression tree parsing with a twist: in part 2, one of the leaf nodes is labelled `humn` and we need to determine what it would have to be for the two main subtrees off the root node to evaluate to the same thing, assuming the root operation was `==`.  I didn't realize we could just simplify the overall equation into a `y = mx + b` format and solve it easily from there (according to the reddit sub), but it's a good thing because I could finally do something non-trivial with function composition instead.  I decided to fold up the same tree given by the input for part one, but instead of rolling up the constant resulting from every sub-expression (as in part 1), one of the leaf nodes is `x`, the unknown. So with the `ResultOfDescent` type I compose a gradually growing function that will carry out the operations inverse to the one at each node. The end result at the top of the tree is a constant from one half, a function from the other half, and finding the answer amounts to simply calling the function on the constant.
+
+Rust's [match construct](https://doc.rust-lang.org/book/ch06-02-match.html) really shows its strength today as it forces us to consider all possible arms, which in our case involves permutations of our sum types `Job` (part 1) and `ResultOfDescent` (part 2). This forces us to consider what would occur to get us to each arm, and gives us the opportunity to document any failure cases in meaningful terms using the `panic!` macro:
+
+```rust
+// in part 2, consider root's operation to be == and calculate what the "humn:" leaf
+// node would have to yell out to make root's two sub-expressions equal
+fn part2(input: &Input) -> i64 {
+
+    match input.jobs.get("root").unwrap() {
+        // evaluate both of root's sub-expressions, one must evaluate to a constant and
+        // the other a function that takes that constant and returns what 'humn' must be
+        Job::Calc(left, _, right) => {
+            let left  = call(left, &input.jobs);
+            let right = call(right, &input.jobs);
+
+            match (left, right) {
+                (Constant(n), Calc(f)) => f(n),
+                (Calc(f), Constant(n)) => f(n),
+
+                (Constant(_), Constant(_)) => panic!("didn't find a 'humn' node anywhere"),
+                (Calc(_), Calc(_))         => panic!("found 'humn' node on both sides of tree")
+            }
+        },
+        Job::Number(_) => panic!("expected the root node to be a calculation but it's a number")
+    }
+}
+```
+
+
+## Day 20 - Grove Positioning System
+
+Today was all about permuting a cycle by shifting numbers around one at a time. After some time trying to mutably update the vector in place and not getting it right, I switched to a functional approach and wrote `shift_element()`. This function gluttonously *triples* the initial cycle before building a new one from a functional pipeline on it.  I was surprised it required three copies as I figured it should only require two, but it crashes on my input with only two. It probably only needs the first element of the third vector instead of the whole thing but I haven't tested the idea yet. I may be calculating the index too far to the right for certain inputs to the function, or misunderstanding something about the whole thing. But three copies of the vector does the trick.
+
+This is the first time I put two trait bounds on the same generic type parameter, `T` in this case. It doesn't matter what the underlying vector element type is as long as the elements are `Clone`-able and equality-comparable with `PartialEq`:
+
+```rust
+// this is a functional way to move an element in a cycle to some other place in the cycle.
+// it wastes a bit of space but it's conceptually easier to understand I think
+fn shift_element<T>(vec    : &Vec<T>,
+                    index  : usize,
+                    offset : i64) -> Vec<T>
+where T: Clone + PartialEq
+{
+    let len = vec.len() as i64;
+
+    // line up three copies of the vector
+    let tripled = [ vec.clone(), vec.clone(), vec.clone() ].concat();
+
+    // wrap the offset to somewhere in our tripled vector
+    let offset = (offset % (len-1) + len) % len
+                 + if offset > 0 { 1 }
+                   else          { 0 };
+
+    [
+        // put the indexed value at the front of the new vector
+        vec![ vec[index].clone() ],
+
+        // pull the rest of the cycle, making sure to filter out the one we put at the front
+        tripled.into_iter()
+               .skip(index + offset as usize)
+               .filter(|el| *el != vec[index])
+               .take(vec.len() - 1)
+               .collect()
+    ].concat()
+}
+```
+
+During testing, I was surprised to find that the identity shift is obtained when the `offset` argument is set to *one less* than the cycle length instead of the length itself. Surely this is standard hooey for an abstract algebraist, but for me, it was a neat discovery about mathematics in the midst of a programming challenge.
+
+```rust
+// first moves len()-1.  note this is the identity shift, not len()!
+assert_eq!(shift_element(&vec![1, 2, 3, 4, 5, 6, 7], 0, 7-1),
+                          vec![1, 2, 3, 4, 5, 6, 7]);
+
+// first moves len()
+assert_eq!(shift_element(&vec![1, 2, 3, 4, 5, 6, 7], 0, 7),
+                          vec![1, 3, 4, 5, 6, 7, 2]);
+```
+
+## Day 19 - Not Enough Minerals
+
+This is the second day that I only got part 1 for. I couldn't figure out how to finish part 2 in a reasonable amount of time. As always, the problem seems to be carefully sized to get this effect for the second part unless we can think of some clever way to shortcut the computation, or find some pattern or something. But today it escaped me, and I still am not sure where to find the efficiency.
+
+
+## Day 18 - Boiling Boulders
+
+This one was really neat. We have to count exposed faces of a set of 3D cubes. In part one it's any exposed face, so any cube that doesn't jut up directly against another cube, we can count all six faces. In part two we discover the clump of cubes has an interior that lava can't get to, and this time we only want to count the faces the lava *can* get to, which amounts to a flood fill around the exterior, counting each face we bump into. The only clever thing I did today was bump the whole mess up/right/back 1 unit to ensure I can start the flood-fill at (0,0,0) and guarantee there's no cube there, and so I can reach around all sides of the cube during the fill.
+
+
+## Day 17 - Pyroclastic Flow
+
+This is the first day I only got the first part for. It's a tetris-like rock-falling simulation where the tiles don't rotate but they can be blown side-to-side by the jet-flow pattern.  We need to infinitely repeat two different sequences today, falling shapes and jet flow patterns, so I implemented a new iterator, `Repeater` that does the obvious thing by cloning the elements of the underlying iterator on the first pass, then repeating the cloning of the stored elements forever in a cycle on subsequent passes. It could probably be more efficient by only doing the clones the first time and always emitting references, but I didn't get around to it because...
+
+Part 2 asks us to iterate the main rock-fall simulation a trillion times. With a lot of annoying text analysis of the output chamber output after a few thousand rounds, I was able to find a repeating pattern. After every 1705 stopped rocks (for my input) there are another 2618 occupied rows in the chamber, so from there it's a relatively easy job to determine how many rows there are after a trillion stopped rocks.  However by this point I was so put off by the grating nature of the whole task that I ended up throwing a small fit and decided to leave the second half for some other time.
+
+
+## Day 16 - Proboscidea Volcanium
+
+In this puzzle we have to find the most efficient way to spend 30 minutes traveling through a tunnel system with valves that can be turned on and which yield various amounts of pressure. The goal is to maximize the total pressure released in the 30 minutes by choosing the smartest route through the tunnels. The closest valve isn't necessarily the next most vital one to turn on to achieve this goal!  I initially considered how to cut the search tree down and thought of various greedy algorithms, such as go for the highest pressure valve first regardless of how far away it was, or go for the next nearest valve regardless of how much pressure it contributed. But I skipped these and hoped that a brute-force of the entire tree wouldn't take too long, reasoning that since we only have 30 minutes we don't have time to check all 15! leaves--most of them will never actually be visited before the algorithm uses up its 30 time steps.
+
+Part two looked hopelessly complicated at first but turned out to be easier than I thought. With an elephant's movements to also worry about, I thought it would be a nightmare to track both us and the elephant at the same time, having to care that one node was reached before another one, etc. But I realized the two walks can be considered independent and independently. Look at it from the point of view of the end of any attempt to turn on the valves. It looks like we took one set of valves and the elephant took the complement of that set. So we ask, how many ways can I visit, say, 4 valves, while the elephant takes the other 11? Then just run the existing `best_path` function for each complement set, sum the two results and find the maximum pressure that way. It works, although a bit slowly at 10.7s total for both parts.
+
+
+## Day 15 - Beacon Exclusion Zone
+
+My first Iterator day! Good thing I completely missed the much quicker way to compute the uncovered cell, as it let me finally start to dig into the more interesting parts of Rust, which for today was a custom iterator implementation using the [Iterator trait](https://doc.rust-lang.org/stable/std/iter/trait.Iterator.html). A few times in the past I've thought about this problem of merging intervals but I always found a way around it, solving the problem in a different way. Today I got serious about it and wrote an iterator that wraps an underlying iterator of Intervals (integer ranges including both endpoints, which was already in the standard library as `std::ops::RangeInclusive<i32>`) and merges a new one into it at the appropriate place, keeping everything sorted and non-overlapping.
+
+This wasn't my first approach to it though. I initially [asked ChatGPT what it would do](https://sharegpt.com/c/8QCfBy2) but even without testing it I can tell it's going to keep pushing the same new interval to the new list over and over again. I should write a few unit tests to confirm this but I'm not going to spend any more time on ChatGPT's ideas for today.
+
+I briefly tried implementing my own in-place vector update but my Vec-fu wasn't up to the challenge.  It turns out github user `ephemient` came up with the code I was looking for, which is published here: https://github.com/ephemient/aoc2022/blob/main/rs/src/day15.rs#L13
+
+The nice thing about the Iterator approach is that the only way to call the underyling iterator is through its `next()` method, so I'm forced to think about having only one Interval at a time instead of all of them at once, as is needed for `ephemient's` vector-update solution above. I found that having to consider only one interval at a time forced a more organized thought process, and with enough grit and unit testing I came up with [IntervalMerger Iterator](https://github.com/jasonincanada/aoc-2022/blob/main/days/day_15/src/main.rs#L120). It doesn't yield the most efficient solution but I'm proud of finally getting around to implementing a built-in Rust trait and having a working interval merger.
+
+There's a lot to optimize for this day but I ran out of time and steam for it.
+
+Here's the mutable state struct for `IntervalMerger`, omitting the actual `next()` call itself:
+
+```rust
+type Interval = std::ops::RangeInclusive<i32>;
+
+// our iterator maintains some mutable state to remember between next() calls
+struct IntervalMerger<I: Iterator<Item=Interval>> {
+    // the underlying iterator of Intervals. the intervals must be sorted by .start
+    iter: I,
+
+    // the new interval to add/merge into the outgoing stream of them
+    new: Interval,
+
+    // whenever we pull the next interval and it's non-overlapping to the right of
+    // the interval we've been constructing, we suddenly have two on our hands: the
+    // newly constructed one, and the next one that should come right after it.
+    // but we can only return one Interval per call to next(), so here we queue
+    // up the one we pulled too soon and it'll go out in the next call to next()
+    queued: Option<Interval>,
+
+    // true once we've returned the new interval
+    returned: bool
+}
+```
+
+
+## Day 14 - Regolith Reservoir
+
+Every year seems to have a falling-sand type thing, and this year's was day 14.  I did the obvious thing: simulate one grain of sand falling at a time, locking them into place when they had nowhere else to fall.
+
+
+## Day 13 - Distress Signal
+
+Finally a parsing task requiring more than the simple string chopping I've been using so far.  I resisted switching over to Haskell and its beautiful parsing combinators and instead wrote the Rust equivalent after learning to use its popular [nom crate](https://docs.rs/nom/latest/nom/). The most complicated it got was `parse_list` which recursively calls itself or parses a number and expects it all wrapped in a pair of `[`/`]`:
+
+```rust
+// [1,2,[3,4],[],5]
+fn parse_list(s: &str) -> IResult<&str, Self> {
+	let parser =
+		delimited(
+			tag("["),
+			separated_list0(tag(","), alt((Packet::parse_number,
+										   Packet::parse_list))),
+			tag("]")
+		);
+
+	map(parser, |list| { List(list) })
+	   (s)
+}
+
+// 10
+fn parse_number(s: &str) -> IResult<&str, Self> {
+	map(digit1, |num: &str| { Number(num.parse().unwrap())})
+	   (s)
+}
+```
+
 
 ## Day 12 - Hill Climbing Algorithm
 
