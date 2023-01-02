@@ -279,7 +279,7 @@ impl Valve {
 
     // "AA" -> 0
     // "AB" -> 1
-    // "BB" -> 26
+    // "BA" -> 26
     fn index_from(s: &str) -> usize {
         let chars = s.as_bytes();
         (chars[0] - b'A') as usize * 26 + (chars[1] - b'A') as usize
