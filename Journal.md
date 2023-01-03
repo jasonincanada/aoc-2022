@@ -20,23 +20,23 @@ I started thinking functionally about the problem, and what benefits I could get
 ```rust
 // copy the shape of the valley and set all tiles to None (distance not yet computed)
 fn to_initialized_distances(&self) -> ValleyMap<Option<usize>> {
-	ValleyMap {
-		tiles : self.tiles.iter()
-					.map(|_| None )
-					.collect(),
-		width : self.width,
-		height: self.height,
-		weather_maps: self.weather_maps
-	}
+    ValleyMap {
+        tiles : self.tiles.iter()
+                    .map(|_| None )
+                    .collect(),
+        width : self.width,
+        height: self.height,
+        weather_maps: self.weather_maps
+    }
 }
 ```
 
 As a bonus this gave me the opportunity to implement a pair of Rust traits: `Index` and `IndexMut`. This type of scenario is exactly what they're for: setting up a custom indexing system into a custom data structure that is more complicated than a simple offset into a vector. This allows succinct structure updates at a specific position using normal indexing syntax, as in the distance-updating part of `bfs()`:
 
 ```rust
-for v in neighbours {            
-	distance_to[&v] = Some(distance_to[&u].unwrap() + 1);
-	queue.push(v);
+for v in neighbours {
+    distance_to[&v] = Some(distance_to[&u].unwrap() + 1);
+    queue.push(v);
 }
 ```
 
@@ -61,29 +61,29 @@ A second benefit of the immutability approach was obvious when considering the b
 // to keep track of the direction or number of blizzards on a tile, just that
 // there was at least one blizzard there at that time
 for (r, row) in weather.tiles.iter().enumerate() {
-	for (c, &tile) in row.iter().enumerate() {
+    for (c, &tile) in row.iter().enumerate() {
 
-		match tile {
-			'>' => for time in 0..valley.weather_maps {
-					   let index = Tile::Valley(time, r, (time + c) % width);
-					   valley[&index] = true;
-				   },
-			'<' => for time in 0..valley.weather_maps {
-					   let index = Tile::Valley(time, r, ((c + time*width) - time) % width);
-					   valley[&index] = true;
-				   },
-			'v' => for time in 0..valley.weather_maps {
-					   let index = Tile::Valley(time, (time + r) % height, c);
-					   valley[&index] = true;
-				   },
-			'^' => for time in 0..valley.weather_maps {
-					   let index = Tile::Valley(time, ((r + time*height) - time) % height, c);
-					   valley[&index] = true;
-				   },
-			'.' => {},
-			 w  => panic!("unknown weather {w}")
-		}
-	}
+        match tile {
+            '>' => for time in 0..valley.weather_maps {
+                       let index = Tile::Valley(time, r, (time + c) % width);
+                       valley[&index] = true;
+                   },
+            '<' => for time in 0..valley.weather_maps {
+                       let index = Tile::Valley(time, r, ((c + time*width) - time) % width);
+                       valley[&index] = true;
+                   },
+            'v' => for time in 0..valley.weather_maps {
+                       let index = Tile::Valley(time, (time + r) % height, c);
+                       valley[&index] = true;
+                   },
+            '^' => for time in 0..valley.weather_maps {
+                       let index = Tile::Valley(time, ((r + time*height) - time) % height, c);
+                       valley[&index] = true;
+                   },
+            '.' => {},
+             w  => panic!("unknown weather {w}")
+        }
+    }
 }
 ```
 
@@ -285,22 +285,22 @@ Finally a parsing task requiring more than the simple string chopping I've been 
 ```rust
 // [1,2,[3,4],[],5]
 fn parse_list(s: &str) -> IResult<&str, Self> {
-	let parser =
-		delimited(
-			tag("["),
-			separated_list0(tag(","), alt((Packet::parse_number,
-										   Packet::parse_list))),
-			tag("]")
-		);
+    let parser =
+        delimited(
+            tag("["),
+            separated_list0(tag(","), alt((Packet::parse_number,
+                                           Packet::parse_list))),
+            tag("]")
+        );
 
-	map(parser, |list| { List(list) })
-	   (s)
+    map(parser, |list| { List(list) })
+       (s)
 }
 
 // 10
 fn parse_number(s: &str) -> IResult<&str, Self> {
-	map(digit1, |num: &str| { Number(num.parse().unwrap())})
-	   (s)
+    map(digit1, |num: &str| { Number(num.parse().unwrap())})
+       (s)
 }
 ```
 
@@ -325,7 +325,7 @@ fn monkey_in_the_middle<F>(monkeys: &Vec<Monkey>,
 Part 1 usage:
 
 ```rust
-fn part1(input: &Input) -> usize {    
+fn part1(input: &Input) -> usize {
     monkey_in_the_middle(&input.monkeys,
                          20,
                          |worry| worry / 3)
