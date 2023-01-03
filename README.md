@@ -33,11 +33,11 @@ Visit the Advent of Code sub-reddit for discussions and other participants' code
 
 ## Past Years
 
-| Year                                              | Language | Stars |
-| ------------------------------------------------- | -------- | ----- |
-| [2022](https://github.com/jasonincanada/aoc-2022) | Rust     | 45    |
-| [2021](https://github.com/jasonincanada/aoc-2021) | C#       | 38    |
-| [2020](https://github.com/jasonincanada/aoc-2020) | Haskell  | 26    |
-| [2019](https://github.com/jasonincanada/aoc-2019) | Haskell  | 32    |
-| [2018](https://github.com/jasonincanada/aoc-2018) | Haskell  | 25    |
-| [2017](https://github.com/jasonincanada/aoc-2017) | Haskell  | 42    |
+| Year                                              | Language | Stars (50) |
+| ------------------------------------------------- | -------- | ---------- |
+| [2022](https://github.com/jasonincanada/aoc-2022) | Rust     | 45         |
+| [2021](https://github.com/jasonincanada/aoc-2021) | C#       | 38         |
+| [2020](https://github.com/jasonincanada/aoc-2020) | Haskell  | 26         |
+| [2019](https://github.com/jasonincanada/aoc-2019) | Haskell  | 32         |
+| [2018](https://github.com/jasonincanada/aoc-2018) | Haskell  | 25         |
+| [2017](https://github.com/jasonincanada/aoc-2017) | Haskell  | 42         |
