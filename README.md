@@ -1,6 +1,6 @@
 ## Advent of Code 2022
 
-My solutions for [Advent of Code 2022](http://adventofcode.com/2022) in Rust
+My solutions for [Advent of Code 2022](http://adventofcode.com/2022) in Rust. Read my [Journal entries](./Journal.md) with a synopsis of my thoughts for each day.
 
 Visit the Advent of Code sub-reddit for discussions and other participants' code submissions here: https://old.reddit.com/r/adventofcode/
 
