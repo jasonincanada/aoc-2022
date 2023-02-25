@@ -121,20 +121,6 @@ fn row_range(sensor: &Sensor) -> Interval {
 
 type Interval = std::ops::RangeInclusive<i32>;
 
-// wrap an existing iterator of Intervals (already sorted by .start) to construct
-// an iterator that merges a new Interval at the right spot in the underlying one
-fn interval_merger<I>(iter: I, new: Interval) -> IntervalMerger<I>
-where
-    I: Iterator<Item=Interval>
-{
-    IntervalMerger {
-        iter,
-        new,
-        queued: None,
-        returned: false
-    }
-}
-
 // our iterator maintains some mutable state to remember between next() calls
 struct IntervalMerger<I: Iterator<Item=Interval>> {
     // the underlying iterator of Intervals. the intervals must be sorted by .start
@@ -222,6 +208,20 @@ where
             let end = new.end().max(next.end());
             new = Interval::new(*start, *end);
         }
+    }
+}
+
+// wrap an existing iterator of Intervals (already sorted by .start) to construct
+// an iterator that merges a new Interval at the right spot in the underlying one
+fn interval_merger<I>(iter: I, new: Interval) -> IntervalMerger<I>
+where
+    I: Iterator<Item=Interval>
+{
+    IntervalMerger {
+        iter,
+        new,
+        queued: None,
+        returned: false
     }
 }
 

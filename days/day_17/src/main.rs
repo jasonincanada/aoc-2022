@@ -234,15 +234,6 @@ fn shapes() -> Vec<Shape> {
 
 /* Repeater Iterator  */
 
-// take an iterator and return a new one that repeats that iterator's items forever
-fn repeat<I: Iterator>(iter: I) -> Repeater<I> {
-    Repeater {
-        iter,
-        holding: vec![],
-        idx: 0
-    }
-}
-
 struct Repeater<I: Iterator> {
     iter: I,
     holding: Vec<I::Item>,
@@ -280,6 +271,15 @@ where
                 Some(next)
             }
         }
+    }
+}
+
+// take an iterator and return a new one that repeats that iterator's items forever
+fn repeat<I: Iterator>(iter: I) -> Repeater<I> {
+    Repeater {
+        iter,
+        holding: vec![],
+        idx: 0
     }
 }
 
