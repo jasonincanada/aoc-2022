@@ -91,7 +91,7 @@ impl Chamber {
              _  => panic!("unknown jet direction")
         };
 
-        self.move_if_possible(rock, location, &relative)
+        self.move_if_possible(rock, location, relative)
     }
 
     fn move_down(&self, rock    : &Shape,
@@ -99,15 +99,15 @@ impl Chamber {
     {
         self.move_if_possible(rock,
                               location,
-                              &Move { row: -1, col: 0 })
+                              Move { row: -1, col: 0 })
     }
 
     // move if there's room to and return true if we did
     fn move_if_possible(&self, rock    : &Shape,
                                location: &mut Pos,
-                               relative: &Move) -> bool
+                               relative: Move) -> bool
     {
-        if self.can_move(rock, location, relative) {
+        if self.can_move(rock, location, &relative) {
             location.row = (location.row as i32 + relative.row) as usize;
             location.col = (location.col as i32 + relative.col) as usize;
             return true
