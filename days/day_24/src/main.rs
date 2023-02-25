@@ -58,8 +58,8 @@ enum Tile {
 // start and goal positions jutting out at the top/bottom, and because time is a dimension,
 // and we want to store it all in one linear vector for constant-time access to elements.
 // it's generic over the type parameter T because we use it for two different things:
-// tracking which positions at which times are not covered in a blizzard (bool), and then
-// in the shortest path algorithm, it tracks minimum distance to each position (usize)
+// tracking which positions at which times are covered in a blizzard (bool), and then
+// in the shortest path algorithm, tracking minimum distance to each position (usize)
 impl<T> Index<&Tile> for ValleyMap<T> {
     type Output = T;
 

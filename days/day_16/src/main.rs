@@ -115,7 +115,7 @@ fn get_distance_grid(valves: &[Valve]) -> DistanceGrid {
 //
 // but it's pretty easy: since we don't have to visit a valve that's been opened by
 // the elephant, and vice versa, the best solution will be one where we visited a certain
-// set of valves, and the elephant visited valves from the *complement* of our set. so
+// set of valves, and the elephant visited valves from the complement of our set. so
 // the problem is now to simulate visiting all possible subsets of valves, then adding up
 // the various complements to find the maximum possible pressure from us working together
 fn part2(input: &Input) -> u32 {
@@ -150,7 +150,7 @@ fn part2(input: &Input) -> u32 {
     }
 
     // phase 2: find the best pressure possible when adding the pressure from one set of
-    // valves to its *complement* set of valves. this accounts for both us and the elephant
+    // valves to its complement set of valves. this accounts for both us and the elephant
     let mut best = 0;
 
     for us in 1..last_index {
@@ -355,7 +355,7 @@ mod tests {
         assert_eq!(valve.tunnels[0], Valve::index_from("CC"));
         assert_eq!(valve.tunnels[1], Valve::index_from("AA"));
 
-        // how cheeky, the input is gramatically correct so we need to test for a single tunnel
+        // how cheeky, the input is grammatically correct so we need to test for a single tunnel
         let valve = Valve::from_string("Valve HH has flow rate=22; tunnel leads to valve GG");
         assert_eq!(valve.index, 189);
         assert_eq!(valve.flow_rate, 22);
